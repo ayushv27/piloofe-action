@@ -66,8 +66,8 @@ export default function Login() {
             <div className="w-16 h-16 bg-secondary rounded-full flex items-center justify-center mx-auto mb-4">
               <Shield className="h-8 w-8 text-white" />
             </div>
-            <h1 className="text-2xl font-bold text-neutral-900 mb-2">AI Security Dashboard</h1>
-            <p className="text-neutral-500">Sign in to your monitoring account</p>
+            <h1 className="text-2xl font-bold text-neutral-900 mb-2">Ghoobad.ai</h1>
+            <p className="text-neutral-500">AI-powered surveillance system</p>
           </div>
           
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">

@@ -43,8 +43,8 @@ export default function Dashboard() {
   return (
     <div className="p-6">
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-neutral-900 mb-2">Security Dashboard</h1>
-        <p className="text-neutral-600">Real-time monitoring and analytics overview</p>
+        <h1 className="text-2xl font-bold text-neutral-900 mb-2">Ghoobad.ai Dashboard</h1>
+        <p className="text-neutral-600">AI-powered surveillance monitoring and analytics</p>
       </div>
       
       {/* Stats Cards */}
