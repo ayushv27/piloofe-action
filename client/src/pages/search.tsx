@@ -1,27 +1,33 @@
-import { useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useState, useRef } from "react";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { 
-  Search as SearchIcon, 
-  Upload, 
-  Video, 
-  Image, 
-  Mic, 
+  Send,
+  Bot,
+  User,
+  Video,
   Clock,
   MapPin,
   Play,
   Download,
-  Brain,
-  Zap
+  Camera,
+  MessageSquare,
+  Sparkles
 } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+
+interface ChatMessage {
+  id: string;
+  type: 'user' | 'assistant';
+  content: string;
+  timestamp: Date;
+  results?: SearchResult[];
+}
 
 interface SearchResult {
   id: string;
@@ -34,13 +40,21 @@ interface SearchResult {
   description: string;
   type: 'person' | 'vehicle' | 'object' | 'event';
   duration?: number;
+  videoUrl?: string;
 }
 
 export default function Search() {
-  const [searchQuery, setSearchQuery] = useState("");
-  const [searchType, setSearchType] = useState("text");
-  const [results, setResults] = useState<SearchResult[]>([]);
-  const [searchTime, setSearchTime] = useState<number | null>(null);
+  const [currentQuery, setCurrentQuery] = useState("");
+  const [messages, setMessages] = useState<ChatMessage[]>([
+    {
+      id: "welcome",
+      type: "assistant",
+      content: "Hello! I'm your CCTV AI assistant. Ask me anything about your surveillance footage - I can help you find specific people, vehicles, events, or analyze activities across your cameras.",
+      timestamp: new Date(),
+    }
+  ]);
+  const [isTyping, setIsTyping] = useState(false);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
 
   const { data: cameras = [] } = useQuery<any[]>({
@@ -48,290 +62,302 @@ export default function Search() {
   });
 
   const searchMutation = useMutation({
-    mutationFn: async (searchData: any) => {
-      // For now, return mock data since we need OpenAI API key for real search
-      await new Promise(resolve => setTimeout(resolve, 2000)); // Simulate API delay
-      return {
-        results: [
-          {
-            id: "1",
-            timestamp: "2024-01-15T14:30:00Z",
-            cameraId: 1,
-            cameraName: "Main Entrance",
-            location: "Building A - Entrance",
-            confidence: 0.92,
-            thumbnail: "/api/placeholder/160/120",
-            description: "Person matching search criteria detected",
-            type: "person" as const,
-            duration: 45
-          },
-          {
-            id: "2", 
-            timestamp: "2024-01-15T16:15:00Z",
-            cameraId: 2,
-            cameraName: "Parking Lot",
-            location: "Outdoor - Parking",
-            confidence: 0.87,
-            thumbnail: "/api/placeholder/160/120",
-            description: "Vehicle activity matching search parameters",
-            type: "vehicle" as const,
-            duration: 120
-          }
-        ],
-        executionTime: 1850
-      };
+    mutationFn: async (query: string) => {
+      // Call to Django backend for AI analysis
+      const response = await apiRequest("POST", "/api/cctv/ask", {
+        query: query,
+        cameras: cameras.map((c: any) => c.id),
+      });
+      return await response.json();
     },
     onSuccess: (data) => {
-      setResults(data.results || []);
-      setSearchTime(data.executionTime || null);
-      toast({
-        title: "Search Complete",
-        description: `Found ${data.results?.length || 0} results in ${data.executionTime || 0}ms`,
-      });
+      const assistantMessage: ChatMessage = {
+        id: Date.now().toString(),
+        type: "assistant",
+        content: data.response || "I found some relevant footage for your query.",
+        timestamp: new Date(),
+        results: data.results || []
+      };
+      
+      setMessages(prev => [...prev, assistantMessage]);
+      setIsTyping(false);
     },
-    onError: () => {
+    onError: (error) => {
+      const errorMessage: ChatMessage = {
+        id: Date.now().toString(),
+        type: "assistant", 
+        content: "I'm having trouble analyzing the footage right now. Please try again or rephrase your question.",
+        timestamp: new Date(),
+      };
+      
+      setMessages(prev => [...prev, errorMessage]);
+      setIsTyping(false);
+      
       toast({
-        title: "Search Failed", 
-        description: "Failed to execute search. Please try again.",
+        title: "Search Error",
+        description: "Unable to process your request. Please try again.",
         variant: "destructive",
       });
     }
   });
 
-  const handleSearch = () => {
-    if (!searchQuery.trim()) {
-      toast({
-        title: "Search Query Required",
-        description: "Please enter a search query to find footage.",
-        variant: "destructive",
-      });
-      return;
-    }
+  const handleSendMessage = () => {
+    if (!currentQuery.trim()) return;
 
-    const searchData = {
-      query: searchQuery,
-      queryType: searchType,
-      filters: {
-        cameraIds: cameras.map((c: any) => c.id),
-      }
+    // Add user message
+    const userMessage: ChatMessage = {
+      id: Date.now().toString(),
+      type: "user",
+      content: currentQuery,
+      timestamp: new Date(),
     };
 
-    searchMutation.mutate(searchData);
+    setMessages(prev => [...prev, userMessage]);
+    setIsTyping(true);
+    
+    // Send to Django backend
+    searchMutation.mutate(currentQuery);
+    setCurrentQuery("");
+  };
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">AI-Powered Search</h1>
+    <div className="h-[calc(100vh-12rem)] flex flex-col">
+      <div className="mb-6">
+        <h1 className="text-3xl font-bold tracking-tight flex items-center">
+          <Camera className="h-8 w-8 mr-3" />
+          Ask My CCTV
+        </h1>
         <p className="text-muted-foreground">
-          Search through surveillance footage using natural language, images, or audio queries
+          Ask questions about your surveillance footage in natural language
         </p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Search Panel */}
-        <div className="lg:col-span-1">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center">
-                <Brain className="h-5 w-5 mr-2" />
-                Multi-Modal Search
+      <div className="flex-1 grid grid-cols-1 lg:grid-cols-4 gap-6">
+        {/* Chat Interface */}
+        <div className="lg:col-span-3 flex flex-col">
+          <Card className="flex-1 flex flex-col">
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center text-lg">
+                <MessageSquare className="h-5 w-5 mr-2" />
+                Conversation
               </CardTitle>
               <CardDescription>
-                Use AI to search footage with text, images, video, or audio
+                Ask questions like "Show me when someone entered at 3 PM" or "Find all vehicles from today"
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <Tabs value={searchType} onValueChange={setSearchType}>
-                <TabsList className="grid w-full grid-cols-4">
-                  <TabsTrigger value="text">
-                    <SearchIcon className="h-4 w-4" />
-                  </TabsTrigger>
-                  <TabsTrigger value="image">
-                    <Image className="h-4 w-4" />
-                  </TabsTrigger>
-                  <TabsTrigger value="video">
-                    <Video className="h-4 w-4" />
-                  </TabsTrigger>
-                  <TabsTrigger value="audio">
-                    <Mic className="h-4 w-4" />
-                  </TabsTrigger>
-                </TabsList>
+            
+            <CardContent className="flex-1 flex flex-col">
+              <ScrollArea className="flex-1 pr-4">
+                <div className="space-y-4">
+                  {messages.map((message) => (
+                    <div
+                      key={message.id}
+                      className={`flex items-start space-x-3 ${
+                        message.type === 'user' ? 'justify-end' : 'justify-start'
+                      }`}
+                    >
+                      {message.type === 'assistant' && (
+                        <div className="flex-shrink-0 w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                          <Bot className="h-4 w-4 text-blue-600" />
+                        </div>
+                      )}
+                      
+                      <div className={`max-w-[80%] ${message.type === 'user' ? 'order-1' : ''}`}>
+                        <div
+                          className={`p-3 rounded-lg ${
+                            message.type === 'user'
+                              ? 'bg-blue-600 text-white'
+                              : 'bg-gray-100 text-gray-900'
+                          }`}
+                        >
+                          <p className="text-sm">{message.content}</p>
+                        </div>
+                        
+                        <div className="text-xs text-gray-500 mt-1">
+                          {message.timestamp.toLocaleTimeString()}
+                        </div>
 
-                <TabsContent value="text" className="space-y-4">
-                  <div>
-                    <Label htmlFor="text-search">Natural Language Query</Label>
-                    <Textarea
-                      id="text-search"
-                      placeholder="Describe what you're looking for... e.g., 'person with red jacket entering through main door'"
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      className="min-h-[100px] mt-2"
-                    />
-                  </div>
-                </TabsContent>
+                        {/* Show results if available */}
+                        {message.results && message.results.length > 0 && (
+                          <div className="mt-3 space-y-2">
+                            {message.results.map((result) => (
+                              <div
+                                key={result.id}
+                                className="bg-white border rounded-lg p-3 hover:bg-gray-50 transition-colors"
+                              >
+                                <div className="flex items-start space-x-3">
+                                  <div className="w-16 h-12 bg-gray-200 rounded flex items-center justify-center flex-shrink-0">
+                                    <Play className="h-4 w-4 text-gray-400" />
+                                  </div>
+                                  <div className="flex-1 min-w-0">
+                                    <div className="flex items-center justify-between">
+                                      <h4 className="text-sm font-medium text-gray-900 truncate">
+                                        {result.cameraName}
+                                      </h4>
+                                      <Badge variant="outline" className="text-xs">
+                                        {Math.round(result.confidence * 100)}%
+                                      </Badge>
+                                    </div>
+                                    <p className="text-xs text-gray-600 mt-1">
+                                      {result.description}
+                                    </p>
+                                    <div className="flex items-center text-xs text-gray-400 mt-1 space-x-3">
+                                      <span className="flex items-center">
+                                        <Clock className="h-3 w-3 mr-1" />
+                                        {new Date(result.timestamp).toLocaleString()}
+                                      </span>
+                                      <span className="flex items-center">
+                                        <MapPin className="h-3 w-3 mr-1" />
+                                        {result.location}
+                                      </span>
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
 
-                <TabsContent value="image" className="space-y-4">
-                  <div>
-                    <Label>Upload Reference Image</Label>
-                    <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
-                      <Upload className="h-8 w-8 text-gray-400 mx-auto mb-2" />
-                      <p className="text-sm text-gray-600">Click to upload an image or drag and drop</p>
+                      {message.type === 'user' && (
+                        <div className="flex-shrink-0 w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center">
+                          <User className="h-4 w-4 text-white" />
+                        </div>
+                      )}
                     </div>
-                  </div>
-                  <Input
-                    placeholder="Describe what to look for in the image..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                  />
-                </TabsContent>
-
-                <TabsContent value="video" className="space-y-4">
-                  <div>
-                    <Label>Upload Reference Video</Label>
-                    <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
-                      <Video className="h-8 w-8 text-gray-400 mx-auto mb-2" />
-                      <p className="text-sm text-gray-600">Upload a video clip to find similar footage</p>
+                  ))}
+                  
+                  {isTyping && (
+                    <div className="flex items-start space-x-3">
+                      <div className="flex-shrink-0 w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                        <Bot className="h-4 w-4 text-blue-600" />
+                      </div>
+                      <div className="bg-gray-100 rounded-lg p-3">
+                        <div className="flex space-x-1">
+                          <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
+                          <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+                          <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                  <Input
-                    placeholder="Additional search context..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                  />
-                </TabsContent>
+                  )}
+                </div>
+                <div ref={messagesEndRef} />
+              </ScrollArea>
 
-                <TabsContent value="audio" className="space-y-4">
-                  <div>
-                    <Label>Upload Audio File</Label>
-                    <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
-                      <Mic className="h-8 w-8 text-gray-400 mx-auto mb-2" />
-                      <p className="text-sm text-gray-600">Upload audio to find matching sounds</p>
-                    </div>
-                  </div>
-                  <Input
-                    placeholder="Describe the audio you're looking for..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                  />
-                </TabsContent>
-              </Tabs>
-
-              <Button 
-                onClick={handleSearch}
-                className="w-full"
-                disabled={searchMutation.isPending}
-              >
-                {searchMutation.isPending ? (
-                  <>
-                    <div className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full mr-2" />
-                    Searching...
-                  </>
-                ) : (
-                  <>
-                    <Zap className="h-4 w-4 mr-2" />
-                    Search Footage
-                  </>
-                )}
-              </Button>
+              {/* Input Area */}
+              <div className="mt-4 flex space-x-2">
+                <Input
+                  value={currentQuery}
+                  onChange={(e) => setCurrentQuery(e.target.value)}
+                  placeholder="Ask about your CCTV footage..."
+                  className="flex-1"
+                  onKeyPress={(e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                      e.preventDefault();
+                      handleSendMessage();
+                    }
+                  }}
+                  disabled={isTyping}
+                />
+                <Button 
+                  onClick={handleSendMessage} 
+                  disabled={!currentQuery.trim() || isTyping}
+                  size="icon"
+                >
+                  <Send className="h-4 w-4" />
+                </Button>
+              </div>
             </CardContent>
           </Card>
         </div>
 
-        {/* Results Panel */}
-        <div className="lg:col-span-2">
+        {/* Suggestions Panel */}
+        <div className="lg:col-span-1">
           <Card>
             <CardHeader>
-              <div className="flex items-center justify-between">
-                <div>
-                  <CardTitle>Search Results</CardTitle>
-                  <CardDescription>
-                    {results.length > 0 ? (
-                      <>Found {results.length} results{searchTime && ` in ${searchTime}ms`}</>
-                    ) : (
-                      "Enter a search query to find relevant footage"
-                    )}
-                  </CardDescription>
-                </div>
-                {results.length > 0 && (
-                  <Button variant="outline" size="sm">
-                    <Download className="h-4 w-4 mr-2" />
-                    Export Results
-                  </Button>
-                )}
-              </div>
+              <CardTitle className="flex items-center text-lg">
+                <Sparkles className="h-5 w-5 mr-2" />
+                Example Questions
+              </CardTitle>
             </CardHeader>
-            <CardContent>
-              {results.length === 0 ? (
-                <div className="text-center py-12">
-                  <SearchIcon className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">No search performed yet</h3>
-                  <p className="text-gray-500 mb-6">
-                    Use the search panel to find specific events, people, or objects in your surveillance footage.
-                  </p>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-lg mx-auto text-sm text-gray-600">
-                    <div className="flex items-center">
-                      <Badge variant="outline" className="mr-2">Try</Badge>
-                      "person with red jacket"
-                    </div>
-                    <div className="flex items-center">
-                      <Badge variant="outline" className="mr-2">Try</Badge>
-                      "delivery truck at gate"
-                    </div>
-                    <div className="flex items-center">
-                      <Badge variant="outline" className="mr-2">Try</Badge>
-                      "suspicious behavior"
-                    </div>
-                    <div className="flex items-center">
-                      <Badge variant="outline" className="mr-2">Try</Badge>
-                      "after 6 PM activity"
-                    </div>
-                  </div>
+            <CardContent className="space-y-3">
+              <div className="space-y-2">
+                <h4 className="text-sm font-medium text-gray-900">People Detection</h4>
+                <div className="space-y-1">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="w-full justify-start text-xs h-auto p-2"
+                    onClick={() => setCurrentQuery("Show me all people who entered today")}
+                  >
+                    "Show me all people who entered today"
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="w-full justify-start text-xs h-auto p-2"
+                    onClick={() => setCurrentQuery("Find person wearing red jacket")}
+                  >
+                    "Find person wearing red jacket"
+                  </Button>
                 </div>
-              ) : (
-                <div className="space-y-4">
-                  {results.map((result) => (
-                    <div
-                      key={result.id}
-                      className="flex items-start space-x-4 p-4 border rounded-lg hover:bg-gray-50 transition-colors"
-                    >
-                      <div className="flex-shrink-0">
-                        <div className="w-40 h-30 bg-gray-200 rounded-lg flex items-center justify-center">
-                          <Play className="h-8 w-8 text-gray-400" />
-                        </div>
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center justify-between">
-                          <h4 className="text-sm font-medium text-gray-900 truncate">
-                            {result.cameraName}
-                          </h4>
-                          <Badge 
-                            variant={result.confidence > 0.9 ? "default" : "secondary"}
-                          >
-                            {Math.round(result.confidence * 100)}% match
-                          </Badge>
-                        </div>
-                        <p className="text-sm text-gray-500 mt-1">
-                          {result.description}
-                        </p>
-                        <div className="flex items-center text-xs text-gray-400 mt-2 space-x-4">
-                          <span className="flex items-center">
-                            <Clock className="h-3 w-3 mr-1" />
-                            {new Date(result.timestamp).toLocaleString()}
-                          </span>
-                          <span className="flex items-center">
-                            <MapPin className="h-3 w-3 mr-1" />
-                            {result.location}
-                          </span>
-                          {result.duration && (
-                            <span>{result.duration}s duration</span>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  ))}
+              </div>
+
+              <div className="space-y-2">
+                <h4 className="text-sm font-medium text-gray-900">Vehicle Tracking</h4>
+                <div className="space-y-1">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="w-full justify-start text-xs h-auto p-2"
+                    onClick={() => setCurrentQuery("Show all delivery trucks from this week")}
+                  >
+                    "Show all delivery trucks from this week"
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="w-full justify-start text-xs h-auto p-2"
+                    onClick={() => setCurrentQuery("Find white car in parking lot")}
+                  >
+                    "Find white car in parking lot"
+                  </Button>
                 </div>
-              )}
+              </div>
+
+              <div className="space-y-2">
+                <h4 className="text-sm font-medium text-gray-900">Activity Analysis</h4>
+                <div className="space-y-1">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="w-full justify-start text-xs h-auto p-2"
+                    onClick={() => setCurrentQuery("What happened at 3 PM yesterday?")}
+                  >
+                    "What happened at 3 PM yesterday?"
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="w-full justify-start text-xs h-auto p-2"
+                    onClick={() => setCurrentQuery("Show suspicious activities after hours")}
+                  >
+                    "Show suspicious activities after hours"
+                  </Button>
+                </div>
+              </div>
+
+              <div className="pt-4 border-t">
+                <div className="text-xs text-gray-500">
+                  <p className="font-medium mb-1">Connected Cameras</p>
+                  <p>{cameras.length} active cameras</p>
+                </div>
+              </div>
             </CardContent>
           </Card>
         </div>
