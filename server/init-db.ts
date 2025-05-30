@@ -1,5 +1,5 @@
 import { db } from "./db";
-import { users, cameras, zones, alerts, employees, systemSettings } from "@shared/schema";
+import { users, cameras, zones, alerts, employees, systemSettings, subscriptionPlans } from "@shared/schema";
 
 async function initializeDatabase() {
   try {
@@ -205,6 +205,65 @@ async function initializeDatabase() {
       dataRetention: 90
     });
     console.log("✅ Created system settings");
+
+    // Create subscription plans
+    await db.insert(subscriptionPlans).values([
+      {
+        name: "Starter",
+        description: "Perfect for small businesses",
+        maxCameras: 5,
+        monthlyPrice: "49.00",
+        yearlyPrice: "490.00",
+        features: [
+          "Up to 5 cameras",
+          "Real-time monitoring",
+          "Basic AI detection",
+          "Email alerts",
+          "7-day video retention",
+          "Mobile app access"
+        ],
+        isPopular: false,
+        isActive: true
+      },
+      {
+        name: "Professional",
+        description: "Ideal for medium businesses",
+        maxCameras: 25,
+        monthlyPrice: "149.00",
+        yearlyPrice: "1490.00",
+        features: [
+          "Up to 25 cameras",
+          "Advanced AI analytics",
+          "Multi-zone management",
+          "SMS & email alerts",
+          "30-day video retention",
+          "Employee tracking",
+          "Custom reports"
+        ],
+        isPopular: true,
+        isActive: true
+      },
+      {
+        name: "Enterprise",
+        description: "For large organizations",
+        maxCameras: 100,
+        monthlyPrice: "399.00",
+        yearlyPrice: "3990.00",
+        features: [
+          "Up to 100 cameras",
+          "Full AI capabilities",
+          "Unlimited zones",
+          "All notification types",
+          "90-day video retention",
+          "Advanced analytics",
+          "24/7 support",
+          "Custom integrations"
+        ],
+        isPopular: false,
+        isActive: true
+      }
+    ]);
+    console.log("✅ Created subscription plans");
 
     console.log("🎉 Database initialization completed successfully!");
   } catch (error) {
