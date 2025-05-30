@@ -22,6 +22,7 @@ export const cameras = pgTable("cameras", {
   name: text("name").notNull(),
   location: text("location").notNull(),
   ip: text("ip").notNull(),
+  rtspUrl: text("rtsp_url"),
   status: text("status").notNull().default("active"), // active, maintenance, offline
   assignedZone: text("assigned_zone"),
   sensitivity: integer("sensitivity").default(7),
