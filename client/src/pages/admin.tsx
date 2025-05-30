@@ -339,6 +339,45 @@ export default function AdminSettings() {
                 </div>
               </div>
               
+              {/* Real-time Notification Testing */}
+              <div>
+                <h4 className="font-medium text-neutral-900 mb-3">Real-time Notifications Testing</h4>
+                <div className="space-y-3">
+                  <Button
+                    onClick={() => testNotification('test', 'medium', 'Test Notification', 'This is a test notification')}
+                    variant="outline"
+                    size="sm"
+                    className="w-full"
+                  >
+                    Send Test Notification
+                  </Button>
+                  <Button
+                    onClick={() => testNotification('alert', 'high', 'High Priority Alert', 'This is a high priority test alert')}
+                    variant="destructive"
+                    size="sm"
+                    className="w-full"
+                  >
+                    Send High Priority Alert
+                  </Button>
+                  <Button
+                    onClick={() => simulateCameraEvent(1, 'motion')}
+                    variant="secondary"
+                    size="sm"
+                    className="w-full"
+                  >
+                    Simulate Motion Detection
+                  </Button>
+                  <Button
+                    onClick={() => simulateCameraEvent(1, 'intrusion')}
+                    variant="destructive"
+                    size="sm"
+                    className="w-full"
+                  >
+                    Simulate Intrusion Alert
+                  </Button>
+                </div>
+              </div>
+
               {/* Notification Settings */}
               <div>
                 <h4 className="font-medium text-neutral-900 mb-3">Notifications</h4>

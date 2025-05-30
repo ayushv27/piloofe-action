@@ -1,6 +1,7 @@
 import { Link, useLocation } from "wouter";
 import { useAuth } from "@/lib/auth";
 import { cn } from "@/lib/utils";
+import { NotificationBell } from "@/components/notification-bell";
 import { 
   Shield, 
   LayoutDashboard, 
@@ -30,14 +31,17 @@ export function Sidebar() {
   return (
     <div className="w-64 bg-white shadow-lg border-r border-neutral-200 flex flex-col h-full">
       <div className="p-6 border-b border-neutral-200">
-        <div className="flex items-center space-x-3">
-          <div className="w-10 h-10 bg-secondary rounded-lg flex items-center justify-center">
-            <Shield className="h-6 w-6 text-white" />
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-3">
+            <div className="w-10 h-10 bg-secondary rounded-lg flex items-center justify-center">
+              <Shield className="h-6 w-6 text-white" />
+            </div>
+            <div>
+              <h2 className="font-bold text-neutral-900">Ghoobad.ai</h2>
+              <p className="text-xs text-neutral-500">AI Surveillance</p>
+            </div>
           </div>
-          <div>
-            <h2 className="font-bold text-neutral-900">Ghoobad.ai</h2>
-            <p className="text-xs text-neutral-500">AI Surveillance</p>
-          </div>
+          <NotificationBell />
         </div>
       </div>
       
