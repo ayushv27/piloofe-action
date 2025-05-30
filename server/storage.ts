@@ -4,6 +4,8 @@ import {
   type Zone, type InsertZone, type Alert, type InsertAlert,
   type Employee, type InsertEmployee, type SystemSettings, type InsertSystemSettings
 } from "@shared/schema";
+import { db } from "./db";
+import { eq } from "drizzle-orm";
 
 export interface IStorage {
   // Users
@@ -424,4 +426,203 @@ export class MemStorage implements IStorage {
   }
 }
 
-export const storage = new MemStorage();
+// DatabaseStorage implementation
+export class DatabaseStorage implements IStorage {
+  async getUser(id: number): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.id, id));
+    return user || undefined;
+  }
+
+  async getUserByEmail(email: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.email, email));
+    return user || undefined;
+  }
+
+  async createUser(insertUser: InsertUser): Promise<User> {
+    const [user] = await db
+      .insert(users)
+      .values(insertUser)
+      .returning();
+    return user;
+  }
+
+  async updateUser(id: number, user: Partial<InsertUser>): Promise<User | undefined> {
+    const [updatedUser] = await db
+      .update(users)
+      .set(user)
+      .where(eq(users.id, id))
+      .returning();
+    return updatedUser || undefined;
+  }
+
+  async deleteUser(id: number): Promise<boolean> {
+    const result = await db.delete(users).where(eq(users.id, id));
+    return (result.rowCount ?? 0) > 0;
+  }
+
+  async getAllUsers(): Promise<User[]> {
+    return await db.select().from(users);
+  }
+
+  // Camera methods
+  async getCamera(id: number): Promise<Camera | undefined> {
+    const [camera] = await db.select().from(cameras).where(eq(cameras.id, id));
+    return camera || undefined;
+  }
+
+  async getAllCameras(): Promise<Camera[]> {
+    return await db.select().from(cameras);
+  }
+
+  async createCamera(camera: InsertCamera): Promise<Camera> {
+    const [newCamera] = await db
+      .insert(cameras)
+      .values(camera)
+      .returning();
+    return newCamera;
+  }
+
+  async updateCamera(id: number, camera: Partial<InsertCamera>): Promise<Camera | undefined> {
+    const [updatedCamera] = await db
+      .update(cameras)
+      .set(camera)
+      .where(eq(cameras.id, id))
+      .returning();
+    return updatedCamera || undefined;
+  }
+
+  async deleteCamera(id: number): Promise<boolean> {
+    const result = await db.delete(cameras).where(eq(cameras.id, id));
+    return (result.rowCount ?? 0) > 0;
+  }
+
+  // Zone methods
+  async getZone(id: number): Promise<Zone | undefined> {
+    const [zone] = await db.select().from(zones).where(eq(zones.id, id));
+    return zone || undefined;
+  }
+
+  async getAllZones(): Promise<Zone[]> {
+    return await db.select().from(zones);
+  }
+
+  async createZone(zone: InsertZone): Promise<Zone> {
+    const [newZone] = await db
+      .insert(zones)
+      .values(zone)
+      .returning();
+    return newZone;
+  }
+
+  async updateZone(id: number, zone: Partial<InsertZone>): Promise<Zone | undefined> {
+    const [updatedZone] = await db
+      .update(zones)
+      .set(zone)
+      .where(eq(zones.id, id))
+      .returning();
+    return updatedZone || undefined;
+  }
+
+  async deleteZone(id: number): Promise<boolean> {
+    const result = await db.delete(zones).where(eq(zones.id, id));
+    return (result.rowCount ?? 0) > 0;
+  }
+
+  // Alert methods
+  async getAlert(id: number): Promise<Alert | undefined> {
+    const [alert] = await db.select().from(alerts).where(eq(alerts.id, id));
+    return alert || undefined;
+  }
+
+  async getAllAlerts(): Promise<Alert[]> {
+    return await db.select().from(alerts).orderBy(alerts.timestamp);
+  }
+
+  async getAlertsByDateRange(from: string, to: string): Promise<Alert[]> {
+    return await db.select().from(alerts);
+  }
+
+  async createAlert(alert: InsertAlert): Promise<Alert> {
+    const [newAlert] = await db
+      .insert(alerts)
+      .values(alert)
+      .returning();
+    return newAlert;
+  }
+
+  async updateAlert(id: number, alert: Partial<InsertAlert>): Promise<Alert | undefined> {
+    const [updatedAlert] = await db
+      .update(alerts)
+      .set(alert)
+      .where(eq(alerts.id, id))
+      .returning();
+    return updatedAlert || undefined;
+  }
+
+  async deleteAlert(id: number): Promise<boolean> {
+    const result = await db.delete(alerts).where(eq(alerts.id, id));
+    return (result.rowCount ?? 0) > 0;
+  }
+
+  // Employee methods
+  async getEmployee(id: number): Promise<Employee | undefined> {
+    const [employee] = await db.select().from(employees).where(eq(employees.id, id));
+    return employee || undefined;
+  }
+
+  async getAllEmployees(): Promise<Employee[]> {
+    return await db.select().from(employees);
+  }
+
+  async getEmployeesByDate(date: string): Promise<Employee[]> {
+    return await db.select().from(employees).where(eq(employees.date, date));
+  }
+
+  async createEmployee(employee: InsertEmployee): Promise<Employee> {
+    const [newEmployee] = await db
+      .insert(employees)
+      .values(employee)
+      .returning();
+    return newEmployee;
+  }
+
+  async updateEmployee(id: number, employee: Partial<InsertEmployee>): Promise<Employee | undefined> {
+    const [updatedEmployee] = await db
+      .update(employees)
+      .set(employee)
+      .where(eq(employees.id, id))
+      .returning();
+    return updatedEmployee || undefined;
+  }
+
+  async deleteEmployee(id: number): Promise<boolean> {
+    const result = await db.delete(employees).where(eq(employees.id, id));
+    return (result.rowCount ?? 0) > 0;
+  }
+
+  // System Settings methods
+  async getSystemSettings(): Promise<SystemSettings | undefined> {
+    const [settings] = await db.select().from(systemSettings).limit(1);
+    return settings || undefined;
+  }
+
+  async updateSystemSettings(settings: Partial<InsertSystemSettings>): Promise<SystemSettings> {
+    const existing = await this.getSystemSettings();
+    if (existing) {
+      const [updated] = await db
+        .update(systemSettings)
+        .set(settings)
+        .where(eq(systemSettings.id, existing.id))
+        .returning();
+      return updated;
+    } else {
+      const [created] = await db
+        .insert(systemSettings)
+        .values(settings)
+        .returning();
+      return created;
+    }
+  }
+}
+
+export const storage = new DatabaseStorage();
