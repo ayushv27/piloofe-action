@@ -115,6 +115,32 @@ export default function AdminSettings() {
     updateSettingsMutation.mutate({ [key]: value });
   };
 
+  const testNotification = async (type: string, priority: string, title: string, message: string) => {
+    try {
+      await apiRequest("POST", "/api/notifications/test", {
+        type,
+        priority,
+        title,
+        message
+      });
+    } catch (error) {
+      console.error("Failed to send test notification:", error);
+    }
+  };
+
+  const simulateCameraEvent = async (cameraId: number, eventType: string) => {
+    try {
+      await apiRequest("POST", "/api/simulate/camera-event", {
+        cameraId,
+        eventType
+      });
+      // Refresh alerts after simulation
+      queryClient.invalidateQueries({ queryKey: ["/api/alerts"] });
+    } catch (error) {
+      console.error("Failed to simulate camera event:", error);
+    }
+  };
+
   const getInitials = (name: string) => {
     return name.split(' ').map(n => n[0]).join('');
   };
@@ -291,28 +317,28 @@ export default function AdminSettings() {
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-neutral-700">Intrusion Detection</span>
                     <Switch 
-                      checked={settings?.alertsIntrusion}
+                      checked={settings?.alertsIntrusion ?? false}
                       onCheckedChange={(checked) => handleSettingChange("alertsIntrusion", checked)}
                     />
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-neutral-700">Motion Detection</span>
                     <Switch 
-                      checked={settings?.alertsMotion}
+                      checked={settings?.alertsMotion ?? false}
                       onCheckedChange={(checked) => handleSettingChange("alertsMotion", checked)}
                     />
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-neutral-700">Loitering Detection</span>
                     <Switch 
-                      checked={settings?.alertsLoitering}
+                      checked={settings?.alertsLoitering ?? false}
                       onCheckedChange={(checked) => handleSettingChange("alertsLoitering", checked)}
                     />
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-neutral-700">Vehicle Detection</span>
                     <Switch 
-                      checked={settings?.alertsVehicle}
+                      checked={settings?.alertsVehicle ?? false}
                       onCheckedChange={(checked) => handleSettingChange("alertsVehicle", checked)}
                     />
                   </div>
@@ -385,21 +411,21 @@ export default function AdminSettings() {
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-neutral-700">Email Notifications</span>
                     <Switch 
-                      checked={settings?.notificationsEmail}
+                      checked={settings?.notificationsEmail ?? false}
                       onCheckedChange={(checked) => handleSettingChange("notificationsEmail", checked)}
                     />
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-neutral-700">SMS Alerts</span>
                     <Switch 
-                      checked={settings?.notificationsSms}
+                      checked={settings?.notificationsSms ?? false}
                       onCheckedChange={(checked) => handleSettingChange("notificationsSms", checked)}
                     />
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-neutral-700">Push Notifications</span>
                     <Switch 
-                      checked={settings?.notificationsPush}
+                      checked={settings?.notificationsPush ?? false}
                       onCheckedChange={(checked) => handleSettingChange("notificationsPush", checked)}
                     />
                   </div>
