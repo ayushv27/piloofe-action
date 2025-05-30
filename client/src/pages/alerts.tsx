@@ -35,8 +35,8 @@ export default function EventAlerts() {
     const matchesSearch = !searchTerm || 
       alert.type.toLowerCase().includes(searchTerm.toLowerCase()) ||
       alert.description.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesType = !eventType || alert.type === eventType;
-    const matchesPriority = !priority || alert.priority === priority;
+    const matchesType = !eventType || eventType === "all" || alert.type === eventType;
+    const matchesPriority = !priority || priority === "all" || alert.priority === priority;
     const matchesDate = !dateFilter || 
       (alert.timestamp && new Date(alert.timestamp).toDateString() === new Date(dateFilter).toDateString());
     
@@ -129,7 +129,7 @@ export default function EventAlerts() {
                   <SelectValue placeholder="All Types" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Types</SelectItem>
+                  <SelectItem value="all">All Types</SelectItem>
                   <SelectItem value="intrusion">Intrusion</SelectItem>
                   <SelectItem value="motion">Motion Detection</SelectItem>
                   <SelectItem value="loitering">Loitering</SelectItem>
@@ -153,7 +153,7 @@ export default function EventAlerts() {
                   <SelectValue placeholder="All Priorities" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Priorities</SelectItem>
+                  <SelectItem value="all">All Priorities</SelectItem>
                   <SelectItem value="high">High</SelectItem>
                   <SelectItem value="medium">Medium</SelectItem>
                   <SelectItem value="low">Low</SelectItem>

@@ -83,7 +83,7 @@ export default function EmployeeMonitoring() {
     const matchesSearch = !searchTerm || 
       employee.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       employee.employeeId.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesDepartment = !departmentFilter || employee.department === departmentFilter;
+    const matchesDepartment = !departmentFilter || departmentFilter === "all" || employee.department === departmentFilter;
     
     return matchesSearch && matchesDepartment;
   });
@@ -223,7 +223,7 @@ export default function EmployeeMonitoring() {
                     <SelectValue placeholder="All Departments" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">All Departments</SelectItem>
+                    <SelectItem value="all">All Departments</SelectItem>
                     <SelectItem value="Security">Security</SelectItem>
                     <SelectItem value="HR">HR</SelectItem>
                     <SelectItem value="IT">IT</SelectItem>

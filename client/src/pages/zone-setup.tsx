@@ -227,7 +227,7 @@ export default function ZoneSetup() {
                           <SelectValue placeholder="Assign to zone" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="">No zone assigned</SelectItem>
+                          <SelectItem value="none">No zone assigned</SelectItem>
                           {zones?.map((zone) => (
                             <SelectItem key={zone.id} value={zone.name.toLowerCase().replace(/\s+/g, '-')}>
                               {zone.name}

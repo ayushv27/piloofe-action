@@ -76,7 +76,7 @@ export default function ReportsAnalytics() {
                   <SelectValue placeholder="All Zones" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Zones</SelectItem>
+                  <SelectItem value="all">All Zones</SelectItem>
                   <SelectItem value="entrance-a">Entrance A</SelectItem>
                   <SelectItem value="lobby">Lobby</SelectItem>
                   <SelectItem value="parking">Parking</SelectItem>
