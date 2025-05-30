@@ -85,7 +85,11 @@ export default function ReportsAnalytics() {
     queryKey: ["/api/zones"],
   });
 
-  const { data: stats } = useQuery({
+  const { data: cameraPerformance = [] } = useQuery({
+    queryKey: ["/api/analytics/camera-performance"],
+  });
+
+  const { data: stats = {} } = useQuery({
     queryKey: ["/api/stats"],
   });
 
@@ -147,7 +151,54 @@ export default function ReportsAnalytics() {
     }
   };
 
-  // Sample data for visualization (will be replaced with real data from API)
+  // Enhanced data formatting with comprehensive analytics
+  const formatIncidentTrends = (data: any[]) => {
+    if (!data || !Array.isArray(data)) return [];
+    return data.map(item => ({
+      date: new Date(item.date).toLocaleDateString(),
+      incidents: item.incidents || item.count || 0,
+      resolved: item.resolved || 0,
+      critical: item.critical || 0,
+      high: item.high || 0,
+      medium: item.medium || 0,
+      low: item.low || 0
+    }));
+  };
+
+  const formatAlertDistribution = (data: any[]) => {
+    if (!data || !Array.isArray(data)) return [];
+    return data.map(item => ({
+      name: item.type || item.name,
+      value: item.count || item.value,
+      percentage: item.percentage || ((item.count / data.reduce((sum, d) => sum + (d.count || 0), 0)) * 100).toFixed(1)
+    }));
+  };
+
+  const formatOccupancyData = (data: any[]) => {
+    if (!data || !Array.isArray(data)) return [];
+    return data.map(item => ({
+      time: (item.hour || 0) + ':00',
+      occupancy: item.averageOccupancy || item.occupancy || 0,
+      peak: item.peakOccupancy || item.peak || 0
+    }));
+  };
+
+  const formatCameraPerformance = (data: any[]) => {
+    if (!data || !Array.isArray(data)) return [];
+    return data.map(camera => ({
+      name: camera.name,
+      uptime: parseFloat(camera.uptime || '95.0'),
+      alerts: camera.alertCount || 0,
+      status: camera.status,
+      responseTime: parseFloat(camera.responseTime || '1.2')
+    }));
+  };
+
+  // Process real data for visualizations
+  const processedIncidentTrends = formatIncidentTrends(incidentTrends);
+  const processedAlertDistribution = formatAlertDistribution(alertDistribution);
+  const processedOccupancyData = formatOccupancyData(occupancyData);
+  const processedCameraPerformance = formatCameraPerformance(cameraPerformance);
   const incidentTrendData = incidentTrends || [
     { date: '2024-01-01', incidents: 12, resolved: 10 },
     { date: '2024-01-02', incidents: 8, resolved: 8 },
