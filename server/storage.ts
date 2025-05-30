@@ -175,9 +175,10 @@ export class MemStorage implements IStorage {
   async createUser(insertUser: InsertUser): Promise<User> {
     const id = this.currentUserId++;
     const user: User = { 
-      ...insertUser, 
+      ...insertUser,
       id, 
-      createdAt: new Date() 
+      createdAt: new Date(),
+      role: insertUser.role || "security"
     };
     this.users.set(id, user);
     return user;
@@ -211,7 +212,13 @@ export class MemStorage implements IStorage {
 
   async createCamera(insertCamera: InsertCamera): Promise<Camera> {
     const id = this.currentCameraId++;
-    const camera: Camera = { ...insertCamera, id };
+    const camera: Camera = { 
+      ...insertCamera, 
+      id,
+      status: insertCamera.status || "active",
+      assignedZone: insertCamera.assignedZone || null,
+      sensitivity: insertCamera.sensitivity || 7
+    };
     this.cameras.set(id, camera);
     return camera;
   }
@@ -240,7 +247,11 @@ export class MemStorage implements IStorage {
 
   async createZone(insertZone: InsertZone): Promise<Zone> {
     const id = this.currentZoneId++;
-    const zone: Zone = { ...insertZone, id };
+    const zone: Zone = { 
+      ...insertZone, 
+      id,
+      description: insertZone.description || null
+    };
     this.zones.set(id, zone);
     return zone;
   }
@@ -284,7 +295,9 @@ export class MemStorage implements IStorage {
     const alert: Alert = { 
       ...insertAlert, 
       id, 
-      timestamp: new Date() 
+      timestamp: new Date(),
+      status: insertAlert.status || "pending",
+      cameraId: insertAlert.cameraId || null
     };
     this.alerts.set(id, alert);
     return alert;
@@ -318,7 +331,14 @@ export class MemStorage implements IStorage {
 
   async createEmployee(insertEmployee: InsertEmployee): Promise<Employee> {
     const id = this.currentEmployeeId++;
-    const employee: Employee = { ...insertEmployee, id };
+    const employee: Employee = { 
+      ...insertEmployee, 
+      id,
+      status: insertEmployee.status || "active",
+      checkIn: insertEmployee.checkIn || null,
+      checkOut: insertEmployee.checkOut || null,
+      lastSeen: insertEmployee.lastSeen || null
+    };
     this.employees.set(id, employee);
     return employee;
   }

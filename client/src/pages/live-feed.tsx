@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Expand, Grid3X3, Volume2, Camera } from "lucide-react";
+import { Expand, Grid3X3, Volume2, Camera as CameraIcon } from "lucide-react";
 import type { Camera } from "@shared/schema";
 
 export default function LiveFeed() {
@@ -63,7 +63,7 @@ export default function LiveFeed() {
               <div className="aspect-video bg-neutral-900 relative overflow-hidden">
                 <div className="w-full h-full bg-gradient-to-br from-neutral-700 to-neutral-900 flex items-center justify-center">
                   <div className="text-center text-white">
-                    <Camera className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                    <CameraIcon className="h-12 w-12 mx-auto mb-2 opacity-50" />
                     <p className="text-sm opacity-75">Live Feed</p>
                     <p className="text-xs opacity-50">{camera.name}</p>
                   </div>
@@ -97,7 +97,7 @@ export default function LiveFeed() {
                       <Volume2 className="h-4 w-4" />
                     </Button>
                     <Button size="sm" variant="ghost">
-                      <Camera className="h-4 w-4" />
+                      <CameraIcon className="h-4 w-4" />
                     </Button>
                   </div>
                 </div>
@@ -112,7 +112,7 @@ export default function LiveFeed() {
             <Card key={`empty-${i}`} className="overflow-hidden">
               <div className="aspect-video bg-neutral-100 flex items-center justify-center">
                 <div className="text-center text-neutral-400">
-                  <Camera className="h-12 w-12 mx-auto mb-2" />
+                  <CameraIcon className="h-12 w-12 mx-auto mb-2" />
                   <p className="text-sm">No Camera Assigned</p>
                 </div>
               </div>
