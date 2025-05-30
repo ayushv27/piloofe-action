@@ -1,7 +1,49 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
+import { WebSocketServer, WebSocket } from "ws";
 import { storage } from "./storage";
 import { insertUserSchema, insertCameraSchema, insertZoneSchema, insertAlertSchema, insertEmployeeSchema, insertSystemSettingsSchema } from "@shared/schema";
+
+// WebSocket clients management
+const wsClients = new Set<WebSocket>();
+
+// Notification system
+interface NotificationData {
+  id: string;
+  type: 'alert' | 'system' | 'employee' | 'camera';
+  priority: 'low' | 'medium' | 'high' | 'critical';
+  title: string;
+  message: string;
+  timestamp: string;
+  data?: any;
+}
+
+function broadcastNotification(notification: NotificationData) {
+  const message = JSON.stringify({
+    type: 'notification',
+    data: notification
+  });
+  
+  wsClients.forEach(client => {
+    if (client.readyState === WebSocket.OPEN) {
+      client.send(message);
+    }
+  });
+}
+
+function broadcastUpdate(type: string, data: any) {
+  const message = JSON.stringify({
+    type: 'update',
+    updateType: type,
+    data
+  });
+  
+  wsClients.forEach(client => {
+    if (client.readyState === WebSocket.OPEN) {
+      client.send(message);
+    }
+  });
+}
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Auth routes
@@ -152,6 +194,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const alertData = insertAlertSchema.parse(req.body);
       const alert = await storage.createAlert(alertData);
+      
+      // Send real-time notification
+      const notification: NotificationData = {
+        id: Date.now().toString(),
+        type: 'alert',
+        priority: alert.priority as 'low' | 'medium' | 'high' | 'critical',
+        title: `New ${alert.type} Alert`,
+        message: alert.description,
+        timestamp: new Date().toISOString(),
+        data: alert
+      };
+      
+      broadcastNotification(notification);
+      broadcastUpdate('alerts', alert);
+      
       res.json(alert);
     } catch (error) {
       res.status(400).json({ message: "Invalid alert data" });
@@ -166,6 +223,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!alert) {
         return res.status(404).json({ message: "Alert not found" });
       }
+      
+      // Notify about alert status changes
+      if (alertData.status) {
+        const notification: NotificationData = {
+          id: Date.now().toString(),
+          type: 'alert',
+          priority: 'medium',
+          title: `Alert ${alertData.status}`,
+          message: `${alert.type} alert has been ${alertData.status}`,
+          timestamp: new Date().toISOString(),
+          data: alert
+        };
+        
+        broadcastNotification(notification);
+      }
+      
+      broadcastUpdate('alerts', alert);
       res.json(alert);
     } catch (error) {
       res.status(400).json({ message: "Invalid alert data" });
@@ -260,6 +334,116 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Add notification routes
+  app.post("/api/notifications/test", async (req, res) => {
+    try {
+      const { type, priority, title, message } = req.body;
+      const notification: NotificationData = {
+        id: Date.now().toString(),
+        type: type || 'system',
+        priority: priority || 'medium',
+        title: title || 'Test Notification',
+        message: message || 'This is a test notification',
+        timestamp: new Date().toISOString()
+      };
+      
+      broadcastNotification(notification);
+      res.json({ message: "Test notification sent", notification });
+    } catch (error) {
+      res.status(400).json({ message: "Failed to send test notification" });
+    }
+  });
+
+  // Simulate camera events for demo
+  app.post("/api/simulate/camera-event", async (req, res) => {
+    try {
+      const { cameraId, eventType } = req.body;
+      const camera = await storage.getCamera(cameraId);
+      
+      if (!camera) {
+        return res.status(404).json({ message: "Camera not found" });
+      }
+
+      // Create alert based on simulated event
+      const alertData = {
+        type: eventType || 'motion',
+        description: `${eventType || 'Motion'} detected on ${camera.name}`,
+        cameraId: camera.id,
+        priority: eventType === 'intrusion' ? 'high' : 'medium',
+        status: 'pending'
+      };
+
+      const alert = await storage.createAlert(alertData);
+      
+      // Send real-time notification
+      const notification: NotificationData = {
+        id: Date.now().toString(),
+        type: 'alert',
+        priority: alert.priority as 'low' | 'medium' | 'high' | 'critical',
+        title: `${eventType || 'Motion'} Detected`,
+        message: `${camera.name}: ${alert.description}`,
+        timestamp: new Date().toISOString(),
+        data: { alert, camera }
+      };
+      
+      broadcastNotification(notification);
+      broadcastUpdate('alerts', alert);
+      
+      res.json({ message: "Camera event simulated", alert, notification });
+    } catch (error) {
+      res.status(400).json({ message: "Failed to simulate camera event" });
+    }
+  });
+
   const httpServer = createServer(app);
+  
+  // Setup WebSocket server
+  const wss = new WebSocketServer({ server: httpServer, path: '/ws' });
+  
+  wss.on('connection', (ws) => {
+    console.log('New WebSocket client connected');
+    wsClients.add(ws);
+    
+    // Send connection confirmation
+    ws.send(JSON.stringify({
+      type: 'connection',
+      message: 'Connected to Ghoobad.ai surveillance system',
+      timestamp: new Date().toISOString()
+    }));
+    
+    ws.on('message', (message) => {
+      try {
+        const data = JSON.parse(message.toString());
+        
+        // Handle different message types from client
+        switch (data.type) {
+          case 'ping':
+            ws.send(JSON.stringify({ type: 'pong', timestamp: new Date().toISOString() }));
+            break;
+          case 'subscribe':
+            // Client can subscribe to specific notification types
+            ws.send(JSON.stringify({ 
+              type: 'subscribed', 
+              subscriptions: data.subscriptions || ['all'],
+              timestamp: new Date().toISOString()
+            }));
+            break;
+        }
+      } catch (error) {
+        console.log('Invalid WebSocket message received');
+      }
+    });
+    
+    ws.on('close', () => {
+      console.log('WebSocket client disconnected');
+      wsClients.delete(ws);
+    });
+    
+    ws.on('error', (error) => {
+      console.log('WebSocket error:', error);
+      wsClients.delete(ws);
+    });
+  });
+  
   return httpServer;
 }
