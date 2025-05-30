@@ -161,6 +161,47 @@ export class MemStorage implements IStorage {
       type: "common",
       description: "Employee break room"
     });
+
+    // Initialize sample alerts
+    this.createAlert({
+      type: "intrusion",
+      description: "Unauthorized person detected in restricted area",
+      cameraId: 1,
+      priority: "high",
+      status: "pending"
+    });
+
+    this.createAlert({
+      type: "motion",
+      description: "Motion detected in parking area after hours",
+      cameraId: 3,
+      priority: "medium",
+      status: "resolved"
+    });
+
+    // Initialize sample employees
+    const today = new Date().toISOString().split('T')[0];
+    this.createEmployee({
+      name: "John Doe",
+      employeeId: "EMP001",
+      department: "Security",
+      checkIn: "08:30",
+      checkOut: null,
+      lastSeen: "Zone A - 5m ago",
+      status: "active",
+      date: today
+    });
+
+    this.createEmployee({
+      name: "Jane Smith",
+      employeeId: "EMP002", 
+      department: "HR",
+      checkIn: "09:15",
+      checkOut: "17:30",
+      lastSeen: "Zone D - 2m ago",
+      status: "active",
+      date: today
+    });
   }
 
   // User methods
