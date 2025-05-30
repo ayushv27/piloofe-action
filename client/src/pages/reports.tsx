@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { BarChart3, FileText, Download, TrendingUp, Clock, CheckCircle, Camera } from "lucide-react";
+import { BarChart3, FileText, Download, TrendingUp, Clock, CheckCircle, Camera as CameraIcon } from "lucide-react";
 
 export default function ReportsAnalytics() {
   const [reportType, setReportType] = useState("incidents");
@@ -197,7 +197,7 @@ export default function ReportsAnalytics() {
         <Card>
           <CardContent className="p-6 text-center">
             <div className="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center mx-auto mb-3">
-              <Camera className="h-6 w-6 text-red-600" />
+              <CameraIcon className="h-6 w-6 text-red-600" />
             </div>
             <p className="text-2xl font-bold text-neutral-900">99.8%</p>
             <p className="text-sm text-neutral-600">Camera Uptime</p>
