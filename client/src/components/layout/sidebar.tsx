@@ -11,13 +11,15 @@ import {
   Settings, 
   ShieldX, 
   BarChart3,
+  Search,
   LogOut 
 } from "lucide-react";
 
 const navigation = [
-  { name: "Dashboard", href: "/", icon: LayoutDashboard },
+  { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   { name: "Live CCTV Feed", href: "/live-feed", icon: Video },
   { name: "Event Alerts", href: "/alerts", icon: AlertTriangle },
+  { name: "AI Search", href: "/search", icon: Search },
   { name: "Employee Monitoring", href: "/employees", icon: Users },
   { name: "Zone & Camera Setup", href: "/zone-setup", icon: Settings },
   { name: "Admin Settings", href: "/admin", icon: ShieldX },

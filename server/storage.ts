@@ -1,8 +1,10 @@
 import { 
-  users, cameras, zones, alerts, employees, systemSettings,
+  users, cameras, zones, alerts, employees, systemSettings, subscriptionPlans, demoRequests, searchQueries,
   type User, type InsertUser, type Camera, type InsertCamera,
   type Zone, type InsertZone, type Alert, type InsertAlert,
-  type Employee, type InsertEmployee, type SystemSettings, type InsertSystemSettings
+  type Employee, type InsertEmployee, type SystemSettings, type InsertSystemSettings,
+  type SubscriptionPlan, type InsertSubscriptionPlan, type DemoRequest, type InsertDemoRequest,
+  type SearchQuery, type InsertSearchQuery
 } from "@shared/schema";
 import { db } from "./db";
 import { eq } from "drizzle-orm";
@@ -15,6 +17,21 @@ export interface IStorage {
   updateUser(id: number, user: Partial<InsertUser>): Promise<User | undefined>;
   deleteUser(id: number): Promise<boolean>;
   getAllUsers(): Promise<User[]>;
+  
+  // Subscription Plans
+  getAllSubscriptionPlans(): Promise<SubscriptionPlan[]>;
+  getSubscriptionPlan(id: number): Promise<SubscriptionPlan | undefined>;
+  createSubscriptionPlan(plan: InsertSubscriptionPlan): Promise<SubscriptionPlan>;
+  updateSubscriptionPlan(id: number, plan: Partial<InsertSubscriptionPlan>): Promise<SubscriptionPlan | undefined>;
+  
+  // Demo Requests
+  createDemoRequest(request: InsertDemoRequest): Promise<DemoRequest>;
+  getAllDemoRequests(): Promise<DemoRequest[]>;
+  updateDemoRequest(id: number, request: Partial<InsertDemoRequest>): Promise<DemoRequest | undefined>;
+  
+  // Search Queries
+  createSearchQuery(query: InsertSearchQuery): Promise<SearchQuery>;
+  getUserSearchQueries(userId: number): Promise<SearchQuery[]>;
   
   // Cameras
   getCamera(id: number): Promise<Camera | undefined>;
@@ -622,6 +639,68 @@ export class DatabaseStorage implements IStorage {
         .returning();
       return created;
     }
+  }
+
+  // Subscription Plans methods
+  async getAllSubscriptionPlans(): Promise<SubscriptionPlan[]> {
+    return await db.select().from(subscriptionPlans).where(eq(subscriptionPlans.isActive, true));
+  }
+
+  async getSubscriptionPlan(id: number): Promise<SubscriptionPlan | undefined> {
+    const [plan] = await db.select().from(subscriptionPlans).where(eq(subscriptionPlans.id, id));
+    return plan || undefined;
+  }
+
+  async createSubscriptionPlan(plan: InsertSubscriptionPlan): Promise<SubscriptionPlan> {
+    const [newPlan] = await db
+      .insert(subscriptionPlans)
+      .values(plan)
+      .returning();
+    return newPlan;
+  }
+
+  async updateSubscriptionPlan(id: number, plan: Partial<InsertSubscriptionPlan>): Promise<SubscriptionPlan | undefined> {
+    const [updatedPlan] = await db
+      .update(subscriptionPlans)
+      .set(plan)
+      .where(eq(subscriptionPlans.id, id))
+      .returning();
+    return updatedPlan || undefined;
+  }
+
+  // Demo Requests methods
+  async createDemoRequest(request: InsertDemoRequest): Promise<DemoRequest> {
+    const [newRequest] = await db
+      .insert(demoRequests)
+      .values(request)
+      .returning();
+    return newRequest;
+  }
+
+  async getAllDemoRequests(): Promise<DemoRequest[]> {
+    return await db.select().from(demoRequests);
+  }
+
+  async updateDemoRequest(id: number, request: Partial<InsertDemoRequest>): Promise<DemoRequest | undefined> {
+    const [updatedRequest] = await db
+      .update(demoRequests)
+      .set(request)
+      .where(eq(demoRequests.id, id))
+      .returning();
+    return updatedRequest || undefined;
+  }
+
+  // Search Queries methods
+  async createSearchQuery(query: InsertSearchQuery): Promise<SearchQuery> {
+    const [newQuery] = await db
+      .insert(searchQueries)
+      .values(query)
+      .returning();
+    return newQuery;
+  }
+
+  async getUserSearchQueries(userId: number): Promise<SearchQuery[]> {
+    return await db.select().from(searchQueries).where(eq(searchQueries.userId, userId));
   }
 }
 

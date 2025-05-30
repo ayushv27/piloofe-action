@@ -8,6 +8,8 @@ import { MainLayout } from "@/components/layout/main-layout";
 import { NotificationToast } from "@/components/notification-toast";
 
 // Pages
+import Landing from "@/pages/landing";
+import Signup from "@/pages/signup";
 import Login from "@/pages/login";
 import Dashboard from "@/pages/dashboard";
 import LiveFeed from "@/pages/live-feed";
@@ -16,6 +18,7 @@ import EmployeeMonitoring from "@/pages/employees";
 import ZoneSetup from "@/pages/zone-setup";
 import AdminSettings from "@/pages/admin";
 import ReportsAnalytics from "@/pages/reports";
+import Search from "@/pages/search";
 import NotFound from "@/pages/not-found";
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -29,10 +32,23 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 }
 
 function Router() {
+  const { isAuthenticated } = useAuth();
+
   return (
     <Switch>
+      <Route path="/landing" component={Landing} />
+      <Route path="/signup" component={Signup} />
       <Route path="/login" component={Login} />
       <Route path="/">
+        {isAuthenticated ? (
+          <ProtectedRoute>
+            <Dashboard />
+          </ProtectedRoute>
+        ) : (
+          <Landing />
+        )}
+      </Route>
+      <Route path="/dashboard">
         <ProtectedRoute>
           <Dashboard />
         </ProtectedRoute>
@@ -55,6 +71,11 @@ function Router() {
       <Route path="/zone-setup">
         <ProtectedRoute>
           <ZoneSetup />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/search">
+        <ProtectedRoute>
+          <Search />
         </ProtectedRoute>
       </Route>
       <Route path="/admin">

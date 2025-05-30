@@ -2,7 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { WebSocketServer, WebSocket } from "ws";
 import { storage } from "./storage";
-import { insertUserSchema, insertCameraSchema, insertZoneSchema, insertAlertSchema, insertEmployeeSchema, insertSystemSettingsSchema } from "@shared/schema";
+import { insertUserSchema, insertCameraSchema, insertZoneSchema, insertAlertSchema, insertEmployeeSchema, insertSystemSettingsSchema, insertSubscriptionPlanSchema, insertDemoRequestSchema, insertSearchQuerySchema } from "@shared/schema";
 
 // WebSocket clients management
 const wsClients = new Set<WebSocket>();
@@ -331,6 +331,126 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch stats" });
+    }
+  });
+
+  // Subscription Plans routes
+  app.get("/api/subscription-plans", async (req, res) => {
+    try {
+      const plans = await storage.getAllSubscriptionPlans();
+      res.json(plans);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch subscription plans" });
+    }
+  });
+
+  app.post("/api/subscription-plans", async (req, res) => {
+    try {
+      const planData = insertSubscriptionPlanSchema.parse(req.body);
+      const plan = await storage.createSubscriptionPlan(planData);
+      res.json(plan);
+    } catch (error) {
+      res.status(400).json({ message: "Invalid subscription plan data" });
+    }
+  });
+
+  // Demo request route
+  app.post("/api/demo-request", async (req, res) => {
+    try {
+      const requestData = insertDemoRequestSchema.parse(req.body);
+      const demoRequest = await storage.createDemoRequest(requestData);
+      
+      // Send email notification (placeholder for SendGrid integration)
+      // TODO: Implement SendGrid email sending with SENDGRID_API_KEY
+      console.log("Demo request submitted:", {
+        name: requestData.name,
+        email: requestData.email,
+        company: requestData.company,
+        message: requestData.message
+      });
+      
+      res.json({ 
+        message: "Demo request submitted successfully",
+        id: demoRequest.id 
+      });
+    } catch (error) {
+      res.status(400).json({ message: "Invalid demo request data" });
+    }
+  });
+
+  // Signup route
+  app.post("/api/auth/signup", async (req, res) => {
+    try {
+      const userData = insertUserSchema.parse(req.body);
+      
+      // Check if user already exists
+      const existingUser = await storage.getUserByEmail(userData.email);
+      if (existingUser) {
+        return res.status(400).json({ message: "User with this email already exists" });
+      }
+      
+      const user = await storage.createUser(userData);
+      const { password: _, ...userWithoutPassword } = user;
+      res.json({ 
+        user: userWithoutPassword,
+        message: "Account created successfully"
+      });
+    } catch (error) {
+      res.status(400).json({ message: "Invalid user data" });
+    }
+  });
+
+  // Search route
+  app.post("/api/search", async (req, res) => {
+    try {
+      const searchData = insertSearchQuerySchema.parse(req.body);
+      const startTime = Date.now();
+      
+      // Save search query
+      const searchQuery = await storage.createSearchQuery(searchData);
+      
+      // Mock search results (placeholder for actual AI search implementation)
+      const mockResults = [
+        {
+          id: "1",
+          timestamp: new Date().toISOString(),
+          cameraId: 1,
+          cameraName: "Camera 01 - Main Entrance",
+          location: "Building A, Floor 1",
+          confidence: 95,
+          thumbnail: "placeholder-thumbnail-url",
+          description: "Person detected matching search criteria",
+          type: "person",
+          duration: 15
+        }
+      ];
+      
+      const executionTime = Date.now() - startTime;
+      
+      res.json({
+        results: mockResults,
+        executionTime,
+        query: searchQuery
+      });
+    } catch (error) {
+      res.status(400).json({ message: "Invalid search data" });
+    }
+  });
+
+  // Stripe checkout session (placeholder)
+  app.post("/api/create-checkout-session", async (req, res) => {
+    try {
+      const { planId, billingCycle } = req.body;
+      
+      // TODO: Implement Stripe checkout session creation with STRIPE_SECRET_KEY
+      // This would create a Stripe checkout session and return the URL
+      
+      res.json({
+        url: "/payment-success", // Placeholder URL
+        message: "Stripe checkout session created (placeholder)"
+      });
+    } catch (error) {
+      res.status(400).json({ message: "Failed to create checkout session" });
     }
   });
 
