@@ -157,7 +157,7 @@ export default function Landing() {
                 <Shield className="h-6 w-6 text-white" />
               </div>
               <div>
-                <h1 className="text-xl font-bold text-gray-900">Ghoobad.ai</h1>
+                <h1 className="text-xl font-bold text-gray-900">Piloo.ai</h1>
                 <p className="text-xs text-gray-500">AI Surveillance Platform</p>
               </div>
             </div>
@@ -286,7 +286,7 @@ export default function Landing() {
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold text-white mb-4">
-              See Ghoobad.ai in Action
+              See Piloo.ai in Action
             </h2>
             <p className="text-xl text-blue-100">
               Request a personalized demo and discover how our AI surveillance platform 
@@ -396,7 +396,7 @@ export default function Landing() {
                 <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
                   <Shield className="h-5 w-5 text-white" />
                 </div>
-                <span className="text-lg font-bold">Ghoobad.ai</span>
+                <span className="text-lg font-bold">Piloo.ai</span>
               </div>
               <p className="text-gray-400 text-sm">
                 Next-generation AI surveillance platform for modern businesses.
@@ -437,7 +437,7 @@ export default function Landing() {
               <div className="flex items-center space-x-4">
                 <a href="#" className="hover:text-white transition-colors">Terms & Conditions</a>
                 <a href="#" className="hover:text-white transition-colors">Privacy Policy</a>
-                <span>&copy; 2024 Ghoobad.ai. All rights reserved.</span>
+                <span>&copy; 2024 Piloo.ai. All rights reserved.</span>
               </div>
               
               <div className="flex items-center space-x-1">

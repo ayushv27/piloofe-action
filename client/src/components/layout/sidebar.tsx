@@ -39,7 +39,7 @@ export function Sidebar() {
               <Shield className="h-6 w-6 text-white" />
             </div>
             <div>
-              <h2 className="font-bold text-neutral-900">Ghoobad.ai</h2>
+              <h2 className="font-bold text-neutral-900">Piloo.ai</h2>
               <p className="text-xs text-neutral-500">AI Surveillance</p>
             </div>
           </div>

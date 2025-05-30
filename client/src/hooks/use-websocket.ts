@@ -33,7 +33,7 @@ export function useWebSocket() {
       wsRef.current = new WebSocket(wsUrl);
 
       wsRef.current.onopen = () => {
-        console.log('WebSocket connected to Ghoobad.ai');
+        console.log('WebSocket connected to Piloo.ai');
         setIsConnected(true);
         
         // Subscribe to all notifications
