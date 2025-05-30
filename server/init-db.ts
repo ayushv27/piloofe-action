@@ -209,55 +209,65 @@ async function initializeDatabase() {
     // Create subscription plans
     await db.insert(subscriptionPlans).values([
       {
-        name: "Starter",
-        description: "Perfect for small businesses",
-        maxCameras: 5,
-        monthlyPrice: "49.00",
-        yearlyPrice: "490.00",
+        name: "Free",
+        description: "Perfect for home users and hobbyists",
+        maxCameras: 1,
+        monthlyPrice: "0.00",
+        yearlyPrice: "0.00",
         features: [
-          "Up to 5 cameras",
-          "Real-time monitoring",
-          "Basic AI detection",
-          "Email alerts",
-          "7-day video retention",
-          "Mobile app access"
+          "1 camera included",
+          "Motion alerts",
+          "RTSP Live view",
+          "Basic 7-day footage access"
         ],
         isPopular: false,
         isActive: true
       },
       {
-        name: "Professional",
-        description: "Ideal for medium businesses",
-        maxCameras: 25,
-        monthlyPrice: "149.00",
-        yearlyPrice: "1490.00",
+        name: "Starter",
+        description: "Ideal for small offices and retail shops",
+        maxCameras: 3,
+        monthlyPrice: "1499.00",
+        yearlyPrice: "14990.00",
         features: [
-          "Up to 25 cameras",
-          "Advanced AI analytics",
-          "Multi-zone management",
-          "SMS & email alerts",
-          "30-day video retention",
-          "Employee tracking",
-          "Custom reports"
+          "Up to 3 cameras",
+          "AI anomaly detection (people/fire/animals)",
+          "15-day archive",
+          "Email alerts",
+          "₹400 per extra camera"
+        ],
+        isPopular: false,
+        isActive: true
+      },
+      {
+        name: "Pro",
+        description: "Perfect for apartment complexes and medium businesses",
+        maxCameras: 10,
+        monthlyPrice: "4999.00",
+        yearlyPrice: "49990.00",
+        features: [
+          "Up to 10 cameras",
+          "Multimodal search (text/image prompt)",
+          "Incident tagging",
+          "30-day archive",
+          "₹500 per extra camera"
         ],
         isPopular: true,
         isActive: true
       },
       {
         name: "Enterprise",
-        description: "For large organizations",
-        maxCameras: 100,
-        monthlyPrice: "399.00",
-        yearlyPrice: "3990.00",
+        description: "For malls, factories, and enterprise campuses",
+        maxCameras: 20,
+        monthlyPrice: "20000.00",
+        yearlyPrice: "200000.00",
         features: [
-          "Up to 100 cameras",
-          "Full AI capabilities",
-          "Unlimited zones",
-          "All notification types",
-          "90-day video retention",
-          "Advanced analytics",
-          "24/7 support",
-          "Custom integrations"
+          "Custom cameras (20+)",
+          "Dedicated GPU support",
+          "90-day archive",
+          "Custom dashboards",
+          "Priority support",
+          "Custom pricing for extra cameras"
         ],
         isPopular: false,
         isActive: true

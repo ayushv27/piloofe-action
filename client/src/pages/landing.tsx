@@ -58,53 +58,62 @@ const features = [
 
 const pricingPlans = [
   {
-    name: "Starter",
-    description: "Perfect for small businesses",
-    maxCameras: 5,
-    monthlyPrice: 49,
-    yearlyPrice: 490,
+    name: "Free",
+    description: "Perfect for home users and hobbyists",
+    maxCameras: 1,
+    monthlyPrice: 0,
+    yearlyPrice: 0,
     features: [
-      "Up to 5 cameras",
-      "Real-time monitoring",
-      "Basic AI detection",
-      "Email alerts",
-      "7-day video retention",
-      "Mobile app access"
+      "1 camera included",
+      "Motion alerts",
+      "RTSP Live view",
+      "Basic 7-day footage access"
     ],
     isPopular: false
   },
   {
-    name: "Professional",
-    description: "Ideal for medium businesses",
-    maxCameras: 25,
-    monthlyPrice: 149,
-    yearlyPrice: 1490,
+    name: "Starter",
+    description: "Ideal for small offices and retail shops",
+    maxCameras: 3,
+    monthlyPrice: 1499,
+    yearlyPrice: 14990,
     features: [
-      "Up to 25 cameras",
-      "Advanced AI analytics",
-      "Multi-zone management",
-      "SMS & email alerts",
-      "30-day video retention",
-      "Employee tracking",
-      "Custom reports"
+      "Up to 3 cameras",
+      "AI anomaly detection (people/fire/animals)",
+      "15-day archive",
+      "Email alerts",
+      "₹400 per extra camera"
+    ],
+    isPopular: false
+  },
+  {
+    name: "Pro",
+    description: "Perfect for apartment complexes and medium businesses",
+    maxCameras: 10,
+    monthlyPrice: 4999,
+    yearlyPrice: 49990,
+    features: [
+      "Up to 10 cameras",
+      "Multimodal search (text/image prompt)",
+      "Incident tagging",
+      "30-day archive",
+      "₹500 per extra camera"
     ],
     isPopular: true
   },
   {
     name: "Enterprise",
-    description: "For large organizations",
-    maxCameras: 100,
-    monthlyPrice: 399,
-    yearlyPrice: 3990,
+    description: "For malls, factories, and enterprise campuses",
+    maxCameras: 20,
+    monthlyPrice: 20000,
+    yearlyPrice: 200000,
     features: [
-      "Up to 100 cameras",
-      "Full AI capabilities",
-      "Unlimited zones",
-      "All notification types",
-      "90-day video retention",
-      "Advanced analytics",
-      "24/7 support",
-      "Custom integrations"
+      "Custom cameras (20+)",
+      "Dedicated GPU support",
+      "90-day archive",
+      "Custom dashboards",
+      "Priority support",
+      "Custom pricing for extra cameras"
     ],
     isPopular: false
   }
@@ -253,12 +262,16 @@ export default function Landing() {
                   <CardTitle className="text-2xl">{plan.name}</CardTitle>
                   <CardDescription>{plan.description}</CardDescription>
                   <div className="mt-4">
-                    <span className="text-4xl font-bold">${plan.monthlyPrice}</span>
-                    <span className="text-gray-500">/month</span>
+                    <span className="text-4xl font-bold">
+                      {plan.monthlyPrice === 0 ? 'Free' : `₹${plan.monthlyPrice.toLocaleString('en-IN')}`}
+                    </span>
+                    {plan.monthlyPrice > 0 && <span className="text-gray-500">/month</span>}
                   </div>
-                  <p className="text-sm text-gray-500">
-                    or ${plan.yearlyPrice}/year (save ${(plan.monthlyPrice * 12) - plan.yearlyPrice})
-                  </p>
+                  {plan.monthlyPrice > 0 && (
+                    <p className="text-sm text-gray-500">
+                      or ₹{plan.yearlyPrice.toLocaleString('en-IN')}/year (save ₹{((plan.monthlyPrice * 12) - plan.yearlyPrice).toLocaleString('en-IN')})
+                    </p>
+                  )}
                 </CardHeader>
                 <CardContent>
                   <ul className="space-y-3 mb-6">

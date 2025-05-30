@@ -745,7 +745,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     // Send connection confirmation
     ws.send(JSON.stringify({
       type: 'connection',
-      message: 'Connected to Ghoobad.ai surveillance system',
+      message: 'Connected to Piloo.ai surveillance system',
       timestamp: new Date().toISOString()
     }));
     
