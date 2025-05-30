@@ -366,26 +366,35 @@ export default function LiveFeed() {
             </Card>
           ))}
         
-        {/* Fill remaining slots if less than 4 cameras */}
-        {activeCameras.length < 4 && 
-          [...Array(4 - activeCameras.length)].map((_, i) => (
-            <Card key={`empty-${i}`} className="overflow-hidden">
-              <div className="aspect-video bg-neutral-100 flex items-center justify-center">
-                <div className="text-center text-neutral-400">
-                  <CameraIcon className="h-12 w-12 mx-auto mb-2" />
-                  <p className="text-sm">No Camera Assigned</p>
+          {/* Fill remaining slots if less than 4 cameras */}
+          {activeCameras.length < 4 && 
+            [...Array(4 - activeCameras.length)].map((_, i) => (
+              <Card key={`empty-${i}`} className="overflow-hidden border-dashed">
+                <div className="aspect-video bg-neutral-50 flex items-center justify-center">
+                  <div className="text-center text-neutral-400">
+                    <CameraIcon className="h-12 w-12 mx-auto mb-2" />
+                    <p className="text-sm">No Camera Assigned</p>
+                  </div>
                 </div>
-              </div>
-              <CardContent className="p-4">
-                <div className="text-center">
-                  <h4 className="font-semibold text-neutral-500">Empty Slot</h4>
-                  <p className="text-sm text-neutral-400">Configure camera in setup</p>
-                </div>
-              </CardContent>
-            </Card>
-          ))
-        }
-      </div>
+                <CardContent className="p-4">
+                  <div className="text-center">
+                    <p className="text-sm text-neutral-500">Empty Slot</p>
+                    <Button 
+                      size="sm" 
+                      variant="outline" 
+                      className="mt-2"
+                      onClick={() => setIsAddDialogOpen(true)}
+                    >
+                      <Plus className="h-4 w-4 mr-1" />
+                      Add Camera
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            ))
+          }
+        </div>
+      )}
     </div>
   );
 }
