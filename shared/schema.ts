@@ -1,4 +1,4 @@
-import { pgTable, text, serial, integer, boolean, timestamp, real } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, boolean, timestamp, real, decimal, jsonb } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -8,6 +8,12 @@ export const users = pgTable("users", {
   email: text("email").notNull().unique(),
   password: text("password").notNull(),
   role: text("role").notNull().default("security"), // admin, security, hr
+  subscriptionPlan: text("subscription_plan").default("trial"),
+  subscriptionStatus: text("subscription_status").default("active"),
+  maxCameras: integer("max_cameras").default(5),
+  stripeCustomerId: text("stripe_customer_id"),
+  stripeSubscriptionId: text("stripe_subscription_id"),
+  subscriptionEndsAt: timestamp("subscription_ends_at"),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -63,6 +69,41 @@ export const systemSettings = pgTable("system_settings", {
   dataRetention: integer("data_retention").default(90),
 });
 
+export const subscriptionPlans = pgTable("subscription_plans", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  description: text("description"),
+  maxCameras: integer("max_cameras").notNull(),
+  monthlyPrice: decimal("monthly_price", { precision: 10, scale: 2 }).notNull(),
+  yearlyPrice: decimal("yearly_price", { precision: 10, scale: 2 }).notNull(),
+  features: text("features").array(),
+  isPopular: boolean("is_popular").default(false),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const demoRequests = pgTable("demo_requests", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  email: text("email").notNull(),
+  company: text("company"),
+  phone: text("phone"),
+  message: text("message"),
+  status: text("status").default("pending"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const searchQueries = pgTable("search_queries", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id),
+  query: text("query").notNull(),
+  queryType: text("query_type").notNull(), // text, image, video, audio
+  filters: jsonb("filters"), // camera IDs, date range, etc.
+  results: jsonb("results"), // search results metadata
+  executionTime: integer("execution_time"), // in milliseconds
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 export const insertUserSchema = createInsertSchema(users).omit({
   id: true,
   createdAt: true,
@@ -89,6 +130,21 @@ export const insertSystemSettingsSchema = createInsertSchema(systemSettings).omi
   id: true,
 });
 
+export const insertSubscriptionPlanSchema = createInsertSchema(subscriptionPlans).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertDemoRequestSchema = createInsertSchema(demoRequests).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertSearchQuerySchema = createInsertSchema(searchQueries).omit({
+  id: true,
+  createdAt: true,
+});
+
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type Camera = typeof cameras.$inferSelect;
@@ -101,3 +157,9 @@ export type Employee = typeof employees.$inferSelect;
 export type InsertEmployee = z.infer<typeof insertEmployeeSchema>;
 export type SystemSettings = typeof systemSettings.$inferSelect;
 export type InsertSystemSettings = z.infer<typeof insertSystemSettingsSchema>;
+export type SubscriptionPlan = typeof subscriptionPlans.$inferSelect;
+export type InsertSubscriptionPlan = z.infer<typeof insertSubscriptionPlanSchema>;
+export type DemoRequest = typeof demoRequests.$inferSelect;
+export type InsertDemoRequest = z.infer<typeof insertDemoRequestSchema>;
+export type SearchQuery = typeof searchQueries.$inferSelect;
+export type InsertSearchQuery = z.infer<typeof insertSearchQuerySchema>;
