@@ -65,20 +65,20 @@ export default function Search() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  const { data: cameras } = useQuery({
+  const { data: cameras = [] } = useQuery<any[]>({
     queryKey: ["/api/cameras"],
   });
 
   const searchMutation = useMutation({
     mutationFn: async (searchData: any) => {
       const response = await apiRequest("POST", "/api/search", searchData);
-      return response;
+      return await response.json();
     },
     onSuccess: (data) => {
       setResults(data.results || []);
       setSearchTime(data.executionTime || null);
       toast({
-        title: "Search Complete",
+        title: "Search Complete", 
         description: `Found ${data.results?.length || 0} results in ${data.executionTime || 0}ms`,
       });
     },
@@ -107,7 +107,7 @@ export default function Search() {
       query: searchQuery,
       queryType: searchType,
       filters: {
-        cameraIds: selectedCameras.length > 0 ? selectedCameras : cameras?.map((c: any) => c.id),
+        cameraIds: selectedCameras.length > 0 ? selectedCameras : cameras.map((c: any) => c.id),
         dateFrom: dateRange.from?.toISOString(),
         dateTo: dateRange.to?.toISOString(),
         timeStart: timeRange[0],
@@ -325,7 +325,7 @@ export default function Search() {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">All Cameras</SelectItem>
-                      {cameras?.map((camera: any) => (
+                      {cameras.map((camera: any) => (
                         <SelectItem key={camera.id} value={camera.id.toString()}>
                           {camera.name}
                         </SelectItem>
@@ -456,7 +456,7 @@ export default function Search() {
             <CardContent>
               {results.length === 0 ? (
                 <div className="text-center py-12">
-                  <Search className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                  <SearchIcon className="h-12 w-12 text-gray-400 mx-auto mb-4" />
                   <h3 className="text-lg font-medium text-gray-900 mb-2">No search performed yet</h3>
                   <p className="text-gray-500 mb-6">
                     Use the search panel to find specific events, people, or objects in your surveillance footage.
