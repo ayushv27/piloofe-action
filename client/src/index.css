@@ -1,0 +1,162 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: 0 0% 100%; /* #FFFFFF */
+  --foreground: 217 19% 27%; /* #1F2937 */
+  --muted: 210 40% 98%; /* #F9FAFB */
+  --muted-foreground: 215 16% 47%; /* #6B7280 */
+  --popover: 0 0% 100%; /* #FFFFFF */
+  --popover-foreground: 217 19% 27%; /* #1F2937 */
+  --card: 0 0% 100%; /* #FFFFFF */
+  --card-foreground: 217 19% 27%; /* #1F2937 */
+  --border: 214 32% 91%; /* #E5E7EB */
+  --input: 214 32% 91%; /* #E5E7EB */
+  --primary: 221 83% 53%; /* #3B82F6 */
+  --primary-foreground: 210 40% 98%; /* #F9FAFB */
+  --secondary: 210 40% 96%; /* #F3F4F6 */
+  --secondary-foreground: 217 19% 27%; /* #1F2937 */
+  --accent: 210 40% 96%; /* #F3F4F6 */
+  --accent-foreground: 217 19% 27%; /* #1F2937 */
+  --destructive: 0 84% 60%; /* #EF4444 */
+  --destructive-foreground: 210 40% 98%; /* #F9FAFB */
+  --ring: 217 19% 27%; /* #1F2937 */
+  --radius: 0.5rem;
+  
+  /* Custom colors for the security dashboard */
+  --success: 166 76% 37%; /* #10B981 */
+  --warning: 43 96% 56%; /* #F59E0B */
+  --danger: 0 84% 60%; /* #EF4444 */
+  --neutral-50: 210 40% 98%; /* #F9FAFB */
+  --neutral-100: 210 40% 96%; /* #F3F4F6 */
+  --neutral-500: 215 16% 47%; /* #6B7280 */
+  --neutral-800: 217 19% 27%; /* #1F2937 */
+  --neutral-900: 224 71% 4%; /* #111827 */
+  
+  /* Chart colors */
+  --chart-1: 166 76% 37%; /* #10B981 */
+  --chart-2: 221 83% 53%; /* #3B82F6 */
+  --chart-3: 43 96% 56%; /* #F59E0B */
+  --chart-4: 0 84% 60%; /* #EF4444 */
+  --chart-5: 271 91% 65%; /* #8B5CF6 */
+  
+  /* Sidebar colors */
+  --sidebar-background: 0 0% 100%; /* #FFFFFF */
+  --sidebar-foreground: 217 19% 27%; /* #1F2937 */
+  --sidebar-primary: 221 83% 53%; /* #3B82F6 */
+  --sidebar-primary-foreground: 210 40% 98%; /* #F9FAFB */
+  --sidebar-accent: 210 40% 96%; /* #F3F4F6 */
+  --sidebar-accent-foreground: 217 19% 27%; /* #1F2937 */
+  --sidebar-border: 214 32% 91%; /* #E5E7EB */
+  --sidebar-ring: 217 19% 27%; /* #1F2937 */
+}
+
+.dark {
+  --background: 224 71% 4%; /* #111827 */
+  --foreground: 210 40% 98%; /* #F9FAFB */
+  --muted: 215 28% 17%; /* #374151 */
+  --muted-foreground: 215 16% 47%; /* #6B7280 */
+  --popover: 224 71% 4%; /* #111827 */
+  --popover-foreground: 210 40% 98%; /* #F9FAFB */
+  --card: 224 71% 4%; /* #111827 */
+  --card-foreground: 210 40% 98%; /* #F9FAFB */
+  --border: 215 28% 17%; /* #374151 */
+  --input: 215 28% 17%; /* #374151 */
+  --primary: 221 83% 53%; /* #3B82F6 */
+  --primary-foreground: 210 40% 98%; /* #F9FAFB */
+  --secondary: 215 28% 17%; /* #374151 */
+  --secondary-foreground: 210 40% 98%; /* #F9FAFB */
+  --accent: 215 28% 17%; /* #374151 */
+  --accent-foreground: 210 40% 98%; /* #F9FAFB */
+  --destructive: 0 84% 60%; /* #EF4444 */
+  --destructive-foreground: 210 40% 98%; /* #F9FAFB */
+  --ring: 215 16% 47%; /* #6B7280 */
+  --radius: 0.5rem;
+  
+  /* Custom colors for dark mode */
+  --success: 166 76% 37%; /* #10B981 */
+  --warning: 43 96% 56%; /* #F59E0B */
+  --danger: 0 84% 60%; /* #EF4444 */
+  --neutral-50: 224 71% 4%; /* #111827 */
+  --neutral-100: 215 28% 17%; /* #374151 */
+  --neutral-500: 215 16% 47%; /* #6B7280 */
+  --neutral-800: 210 40% 96%; /* #F3F4F6 */
+  --neutral-900: 210 40% 98%; /* #F9FAFB */
+  
+  /* Sidebar colors for dark mode */
+  --sidebar-background: 224 71% 4%; /* #111827 */
+  --sidebar-foreground: 210 40% 98%; /* #F9FAFB */
+  --sidebar-primary: 221 83% 53%; /* #3B82F6 */
+  --sidebar-primary-foreground: 210 40% 98%; /* #F9FAFB */
+  --sidebar-accent: 215 28% 17%; /* #374151 */
+  --sidebar-accent-foreground: 210 40% 98%; /* #F9FAFB */
+  --sidebar-border: 215 28% 17%; /* #374151 */
+  --sidebar-ring: 215 16% 47%; /* #6B7280 */
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply font-sans antialiased bg-background text-foreground;
+  }
+  
+  /* Custom utility classes for the security dashboard */
+  .text-success {
+    color: hsl(var(--success));
+  }
+  
+  .text-warning {
+    color: hsl(var(--warning));
+  }
+  
+  .text-danger {
+    color: hsl(var(--danger));
+  }
+  
+  .bg-success {
+    background-color: hsl(var(--success));
+  }
+  
+  .bg-warning {
+    background-color: hsl(var(--warning));
+  }
+  
+  .bg-danger {
+    background-color: hsl(var(--danger));
+  }
+  
+  .bg-success\/10 {
+    background-color: hsl(var(--success) / 0.1);
+  }
+  
+  .bg-warning\/10 {
+    background-color: hsl(var(--warning) / 0.1);
+  }
+  
+  .bg-danger\/10 {
+    background-color: hsl(var(--danger) / 0.1);
+  }
+  
+  .bg-secondary\/10 {
+    background-color: hsl(var(--primary) / 0.1);
+  }
+  
+  /* Gradient backgrounds for login screen */
+  .bg-gradient-to-br {
+    background-image: linear-gradient(to bottom right, var(--tw-gradient-stops));
+  }
+  
+  .from-primary {
+    --tw-gradient-from: hsl(217 19% 27%);
+    --tw-gradient-to: hsl(217 19% 27% / 0);
+    --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to);
+  }
+  
+  .to-neutral-800 {
+    --tw-gradient-to: hsl(217 19% 27%);
+  }
+}
