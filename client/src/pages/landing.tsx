@@ -5,7 +5,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Shield, Video, AlertTriangle, Users, Brain, Clock, CheckCircle, Mail, Phone } from "lucide-react";
+import { Shield, Video, AlertTriangle, Users, Brain, Clock, CheckCircle, Mail, Phone, Heart } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -432,8 +432,28 @@ export default function Landing() {
               </div>
             </div>
           </div>
-          <div className="border-t border-gray-800 mt-12 pt-8 text-center text-sm text-gray-400">
-            <p>&copy; 2024 Ghoobad.ai. All rights reserved.</p>
+          <div className="border-t border-gray-800 mt-12 pt-8">
+            <div className="flex items-center justify-between text-sm text-gray-400">
+              <div className="flex items-center space-x-4">
+                <a href="#" className="hover:text-white transition-colors">Terms & Conditions</a>
+                <a href="#" className="hover:text-white transition-colors">Privacy Policy</a>
+                <span>&copy; 2024 Ghoobad.ai. All rights reserved.</span>
+              </div>
+              
+              <div className="flex items-center space-x-1">
+                <span>Made with</span>
+                <Heart className="h-4 w-4 text-red-500 fill-current" />
+                <span>by</span>
+                <a 
+                  href="https://pyrack.com/" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="font-medium text-blue-400 hover:text-blue-300 transition-colors"
+                >
+                  Pyrack
+                </a>
+              </div>
+            </div>
           </div>
         </div>
       </footer>
