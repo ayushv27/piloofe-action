@@ -18,7 +18,8 @@ import {
   LogOut,
   Menu,
   X,
-  Sparkles
+  Sparkles,
+  Crown
 } from "lucide-react";
 
 const navigation = [
@@ -29,6 +30,7 @@ const navigation = [
   { name: "Event Alerts", href: "/alerts", icon: AlertTriangle },
   { name: "Employee Monitoring", href: "/employees", icon: Users },
   { name: "Zone & Camera Setup", href: "/zone-setup", icon: Settings },
+  { name: "Subscription Plans", href: "/subscription", icon: Shield },
   { name: "Admin Settings", href: "/admin", icon: ShieldX },
   { name: "Reports & Analytics", href: "/reports", icon: BarChart3 },
 ];

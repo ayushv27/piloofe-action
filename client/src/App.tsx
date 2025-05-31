@@ -23,6 +23,7 @@ import ReportsAnalytics from "@/pages/reports";
 import Search from "@/pages/search";
 import Terms from "@/pages/terms";
 import Privacy from "@/pages/privacy";
+import Subscription from "@/pages/subscription";
 import NotFound from "@/pages/not-found";
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -110,6 +111,11 @@ function Router() {
       <Route path="/privacy">
         <ProtectedRoute>
           <Privacy />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/subscription">
+        <ProtectedRoute>
+          <Subscription />
         </ProtectedRoute>
       </Route>
       <Route component={NotFound} />

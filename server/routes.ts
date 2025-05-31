@@ -1052,6 +1052,74 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Subscription management endpoints
+  app.get("/api/subscription-plans", async (req, res) => {
+    try {
+      const plans = await storage.getAllSubscriptionPlans();
+      res.json(plans);
+    } catch (error) {
+      console.error("Error fetching subscription plans:", error);
+      res.status(500).json({ error: "Failed to fetch subscription plans" });
+    }
+  });
+
+  app.get("/api/user/subscription", async (req, res) => {
+    try {
+      if (!req.session?.userId) {
+        return res.status(401).json({ error: "Not authenticated" });
+      }
+
+      const user = await storage.getUser(req.session.userId);
+      if (!user) {
+        return res.status(404).json({ error: "User not found" });
+      }
+
+      res.json({
+        currentPlan: user.subscriptionPlan || "Basic",
+        status: user.subscriptionStatus || "active",
+        maxCameras: user.maxCameras || 5,
+        subscriptionEndsAt: user.subscriptionEndsAt
+      });
+    } catch (error) {
+      console.error("Error fetching user subscription:", error);
+      res.status(500).json({ error: "Failed to fetch subscription details" });
+    }
+  });
+
+  app.post("/api/user/change-plan", async (req, res) => {
+    try {
+      if (!req.session?.userId) {
+        return res.status(401).json({ error: "Not authenticated" });
+      }
+
+      const { planId } = req.body;
+      const plan = await storage.getSubscriptionPlan(planId);
+      
+      if (!plan) {
+        return res.status(404).json({ error: "Subscription plan not found" });
+      }
+
+      const updatedUser = await storage.updateUser(req.session.userId, {
+        subscriptionPlan: plan.name,
+        subscriptionStatus: "active",
+        maxCameras: plan.maxCameras,
+        subscriptionEndsAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) // 30 days from now
+      });
+
+      if (!updatedUser) {
+        return res.status(404).json({ error: "User not found" });
+      }
+
+      res.json({ 
+        message: "Subscription plan updated successfully",
+        plan: plan.name 
+      });
+    } catch (error) {
+      console.error("Error changing subscription plan:", error);
+      res.status(500).json({ error: "Failed to update subscription plan" });
+    }
+  });
+
   const httpServer = createServer(app);
   
   // Setup WebSocket server
