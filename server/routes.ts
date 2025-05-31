@@ -745,6 +745,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // AI Chat routes for CCTV queries
+  app.post("/api/ai/chat", async (req, res) => {
+    try {
+      const { query } = req.body;
+      
+      // Process natural language query and generate intelligent response
+      const response = await processAIChatQuery(query);
+      
+      res.json(response);
+    } catch (error) {
+      console.error("AI Chat error:", error);
+      res.status(500).json({ 
+        response: "I'm experiencing technical difficulties right now. Please try again in a moment.",
+        error: "AI processing failed"
+      });
+    }
+  });
+
   // Report generation routes
   app.post("/api/reports/generate", async (req, res) => {
     try {

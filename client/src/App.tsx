@@ -12,6 +12,7 @@ import Landing from "@/pages/landing";
 import Signup from "@/pages/signup";
 import Login from "@/pages/login";
 import Dashboard from "@/pages/dashboard";
+import AIChat from "@/pages/ai-chat";
 import LiveFeed from "@/pages/live-feed";
 import Recordings from "@/pages/recordings";
 import EventAlerts from "@/pages/alerts";
@@ -52,6 +53,11 @@ function Router() {
       <Route path="/dashboard">
         <ProtectedRoute>
           <Dashboard />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/ai-chat">
+        <ProtectedRoute>
+          <AIChat />
         </ProtectedRoute>
       </Route>
       <Route path="/live-feed">

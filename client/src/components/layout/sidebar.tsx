@@ -17,11 +17,13 @@ import {
   FileVideo,
   LogOut,
   Menu,
-  X
+  X,
+  Sparkles
 } from "lucide-react";
 
 const navigation = [
   { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
+  { name: "Ask My CCTV", href: "/ai-chat", icon: Sparkles },
   { name: "Live CCTV Feed", href: "/live-feed", icon: Video },
   { name: "Recordings Archive", href: "/recordings", icon: FileVideo },
   { name: "Event Alerts", href: "/alerts", icon: AlertTriangle },
