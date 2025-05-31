@@ -553,6 +553,129 @@ Available step IDs and their point values:
 - "employees": 20 points
 - "settings": 15 points
 
+## Management Panel API (Company Admin)
+
+### GET /api/admin/clients
+Get all Piloo.ai clients for company management
+```json
+Response: [
+  {
+    "id": "number",
+    "username": "string",
+    "email": "string",
+    "role": "string",
+    "subscriptionPlan": "string|null",
+    "subscriptionStatus": "string|null",
+    "maxCameras": "number|null",
+    "stripeCustomerId": "string|null",
+    "stripeSubscriptionId": "string|null",
+    "subscriptionEndsAt": "string|null",
+    "createdAt": "string|null",
+    "lastLogin": "string",
+    "isActive": "boolean",
+    "menuPermissions": {
+      "dashboard": "boolean",
+      "aiChat": "boolean",
+      "liveFeed": "boolean",
+      "recordings": "boolean",
+      "alerts": "boolean",
+      "employees": "boolean",
+      "zones": "boolean",
+      "reports": "boolean",
+      "subscription": "boolean"
+    }
+  }
+]
+```
+
+### PUT /api/admin/clients/:id
+Update client information
+```json
+Request:
+{
+  "username": "string",
+  "email": "string",
+  "subscriptionPlan": "string",
+  "maxCameras": "number",
+  "isActive": "boolean"
+}
+```
+
+### PUT /api/admin/clients/:id/status
+Toggle client account status
+```json
+Request:
+{
+  "isActive": "boolean"
+}
+
+Response:
+{
+  "message": "string"
+}
+```
+
+### PUT /api/admin/clients/:id/permissions
+Update client feature access permissions
+```json
+Request:
+{
+  "permissions": {
+    "dashboard": "boolean",
+    "aiChat": "boolean",
+    "liveFeed": "boolean",
+    "recordings": "boolean",
+    "alerts": "boolean",
+    "employees": "boolean",
+    "zones": "boolean",
+    "reports": "boolean",
+    "subscription": "boolean"
+  }
+}
+
+Response:
+{
+  "message": "string"
+}
+```
+
+### POST /api/admin/clients/:id/refund
+Process full refund for client subscription
+```json
+Response:
+{
+  "message": "string",
+  "refundId": "string",
+  "amount": "number",
+  "status": "string"
+}
+```
+
+### POST /api/admin/clients
+Create new client account
+```json
+Request:
+{
+  "username": "string",
+  "email": "string",
+  "maxCameras": "number",
+  "subscriptionPlan": "string"
+}
+
+Response: User
+```
+
+### PUT /api/admin/clients/:id/subscription
+Change client subscription plan
+```json
+Request:
+{
+  "planName": "string"
+}
+
+Response: User
+```
+
 ## WebSocket Events
 
 The frontend expects WebSocket connections at `/ws` for real-time updates:
