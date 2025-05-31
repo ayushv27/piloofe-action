@@ -516,6 +516,43 @@ Request:
 Response: SearchQuery[]
 ```
 
+## User Onboarding
+
+### GET /api/user/onboarding
+```json
+Response:
+{
+  "currentStep": "number",
+  "completedSteps": "string[]",
+  "totalPoints": "number",
+  "achievements": "string[]"
+}
+```
+
+### POST /api/user/onboarding/complete
+```json
+Request:
+{
+  "stepId": "string"
+}
+
+Response:
+{
+  "message": "string",
+  "stepId": "string",
+  "pointsEarned": "number"
+}
+```
+
+Available step IDs and their point values:
+- "welcome": 10 points
+- "dashboard": 20 points
+- "cameras": 30 points
+- "alerts": 25 points
+- "ai-chat": 35 points
+- "employees": 20 points
+- "settings": 15 points
+
 ## WebSocket Events
 
 The frontend expects WebSocket connections at `/ws` for real-time updates:

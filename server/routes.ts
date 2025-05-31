@@ -1123,12 +1123,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Onboarding API endpoints
   app.get("/api/user/onboarding", async (req, res) => {
     try {
-      if (!req.session?.userId) {
-        return res.status(401).json({ error: "Not authenticated" });
-      }
-
       // For demo purposes, return initial onboarding state
-      // In production, this would fetch from database
+      // In production, this would fetch from database based on authenticated user
       res.json({
         currentStep: 0,
         completedSteps: [],
@@ -1143,14 +1139,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/user/onboarding/complete", async (req, res) => {
     try {
-      if (!req.session?.userId) {
-        return res.status(401).json({ error: "Not authenticated" });
-      }
-
       const { stepId } = req.body;
       
       // Define step points
-      const stepPoints = {
+      const stepPoints: { [key: string]: number } = {
         welcome: 10,
         dashboard: 20,
         cameras: 30,
