@@ -41,29 +41,37 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="p-6">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-neutral-900 mb-2">Piloo.ai Dashboard</h1>
-        <p className="text-neutral-600">AI-powered surveillance monitoring and analytics</p>
+    <div className="space-y-6">
+      {/* Enhanced Header */}
+      <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl p-8 text-white shadow-xl">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold mb-2">Piloo.ai Dashboard</h1>
+            <p className="text-blue-100 text-lg">AI-powered surveillance monitoring and analytics</p>
+          </div>
+          <div className="text-right">
+            <div className="text-2xl font-bold">{new Date().toLocaleDateString()}</div>
+            <div className="text-blue-100">{new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
+          </div>
+        </div>
       </div>
       
-      {/* Stats Cards */}
+      {/* Enhanced Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <Card>
+        <Card className="bg-white/90 backdrop-blur-sm border-0 shadow-lg hover:shadow-xl transition-all duration-300 group">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-neutral-600">Active Cameras</p>
-                <p className="text-2xl font-bold text-neutral-900">{stats?.activeCameras || 0}</p>
+                <p className="text-sm font-medium text-slate-600">Active Cameras</p>
+                <p className="text-3xl font-bold text-slate-900 group-hover:text-green-600 transition-colors">{stats?.activeCameras || 0}</p>
               </div>
-              <div className="w-12 h-12 bg-success/10 rounded-lg flex items-center justify-center">
-                <Video className="h-6 w-6 text-success" />
+              <div className="p-4 bg-gradient-to-br from-green-100 to-green-200 rounded-xl group-hover:from-green-200 group-hover:to-green-300 transition-all">
+                <Video className="h-8 w-8 text-green-600" />
               </div>
             </div>
             <div className="mt-4 flex items-center">
-              <TrendingUp className="h-4 w-4 text-success mr-1" />
-              <span className="text-success text-sm font-medium">Online</span>
-              <span className="text-neutral-500 text-sm ml-1">and monitoring</span>
+              <TrendingUp className="h-4 w-4 text-green-600 mr-1" />
+              <span className="text-green-600 text-sm font-medium">98.5% uptime</span>
             </div>
           </CardContent>
         </Card>
