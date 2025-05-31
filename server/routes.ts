@@ -1349,6 +1349,93 @@ export async function registerRoutes(app: Express): Promise<Server> {
       wsClients.delete(ws);
     });
   });
+
+  // Onboarding and Gamification Routes
+  
+  // Get user progress
+  app.get("/api/onboarding/progress", async (req, res) => {
+    try {
+      const userId = 1; // In real app, get from session/auth
+      let progress = await storage.getUserProgress(userId);
+      
+      if (!progress) {
+        // Create initial progress for new user
+        progress = await storage.createUserProgress({
+          userId,
+          currentStep: 1,
+          completedSteps: [],
+          totalPoints: 0,
+          achievements: [],
+          tutorialCompleted: false,
+        });
+      }
+      
+      res.json(progress);
+    } catch (error) {
+      console.error("Error fetching user progress:", error);
+      res.status(500).json({ message: "Failed to fetch user progress" });
+    }
+  });
+
+  // Get all onboarding steps
+  app.get("/api/onboarding/steps", async (req, res) => {
+    try {
+      const steps = await storage.getAllOnboardingSteps();
+      res.json(steps);
+    } catch (error) {
+      console.error("Error fetching onboarding steps:", error);
+      res.status(500).json({ message: "Failed to fetch onboarding steps" });
+    }
+  });
+
+  // Complete an onboarding step
+  app.post("/api/onboarding/complete-step/:stepId", async (req, res) => {
+    try {
+      const stepId = parseInt(req.params.stepId);
+      const userId = 1; // In real app, get from session/auth
+      
+      const updatedProgress = await storage.completeOnboardingStep(userId, stepId);
+      
+      if (!updatedProgress) {
+        return res.status(404).json({ message: "User progress not found" });
+      }
+      
+      res.json(updatedProgress);
+    } catch (error) {
+      console.error("Error completing onboarding step:", error);
+      res.status(500).json({ message: "Failed to complete onboarding step" });
+    }
+  });
+
+  // Get all achievements
+  app.get("/api/achievements", async (req, res) => {
+    try {
+      const achievements = await storage.getAllAchievements();
+      res.json(achievements);
+    } catch (error) {
+      console.error("Error fetching achievements:", error);
+      res.status(500).json({ message: "Failed to fetch achievements" });
+    }
+  });
+
+  // Award achievement to user
+  app.post("/api/achievements/award/:achievementId", async (req, res) => {
+    try {
+      const achievementId = parseInt(req.params.achievementId);
+      const userId = 1; // In real app, get from session/auth
+      
+      const updatedProgress = await storage.awardAchievement(userId, achievementId);
+      
+      if (!updatedProgress) {
+        return res.status(404).json({ message: "User progress not found" });
+      }
+      
+      res.json(updatedProgress);
+    } catch (error) {
+      console.error("Error awarding achievement:", error);
+      res.status(500).json({ message: "Failed to award achievement" });
+    }
+  });
   
   return httpServer;
 }

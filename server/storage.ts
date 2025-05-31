@@ -148,6 +148,9 @@ export class MemStorage implements IStorage {
     this.demoRequests = new Map();
     this.searchQueries = new Map();
     this.recordings = new Map();
+    this.userProgress = new Map();
+    this.onboardingSteps = new Map();
+    this.achievements = new Map();
     this.currentUserId = 1;
     this.currentCameraId = 1;
     this.currentZoneId = 1;
@@ -157,6 +160,9 @@ export class MemStorage implements IStorage {
     this.currentDemoRequestId = 1;
     this.currentSearchQueryId = 1;
     this.currentRecordingId = 1;
+    this.currentUserProgressId = 1;
+    this.currentOnboardingStepId = 1;
+    this.currentAchievementId = 1;
     
     this.initializeData();
   }
