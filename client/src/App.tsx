@@ -1,3 +1,10 @@
+/**
+ * Piloo.ai - AI-Powered CCTV Monitoring Platform
+ * Copyright (c) 2025 Pyrack Solutions Pvt. Ltd.
+ * Website: https://pyrack.com/
+ * Licensed under the MIT License
+ */
+
 import { Switch, Route, Redirect } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";

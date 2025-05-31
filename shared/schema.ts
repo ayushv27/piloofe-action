@@ -1,3 +1,10 @@
+/**
+ * Piloo.ai - AI-Powered CCTV Monitoring Platform
+ * Copyright (c) 2025 Pyrack Solutions Pvt. Ltd.
+ * Website: https://pyrack.com/
+ * Licensed under the MIT License
+ */
+
 import { pgTable, text, serial, integer, boolean, timestamp, real, decimal, jsonb } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";

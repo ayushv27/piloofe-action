@@ -1,6 +1,9 @@
 #!/bin/bash
 
 # Piloo.ai Deployment Script
+# Copyright (c) 2025 Pyrack Solutions Pvt. Ltd.
+# Website: https://pyrack.com/
+# Licensed under the MIT License
 # This script helps deploy the Dockerized Piloo.ai application
 
 set -e
