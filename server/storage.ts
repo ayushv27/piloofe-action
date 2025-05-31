@@ -90,12 +90,20 @@ export class MemStorage implements IStorage {
   private zones: Map<number, Zone>;
   private alerts: Map<number, Alert>;
   private employees: Map<number, Employee>;
+  private subscriptionPlans: Map<number, SubscriptionPlan>;
+  private demoRequests: Map<number, DemoRequest>;
+  private searchQueries: Map<number, SearchQuery>;
+  private recordings: Map<number, Recording>;
   private systemSettings: SystemSettings | undefined;
   private currentUserId: number;
   private currentCameraId: number;
   private currentZoneId: number;
   private currentAlertId: number;
   private currentEmployeeId: number;
+  private currentSubscriptionPlanId: number;
+  private currentDemoRequestId: number;
+  private currentSearchQueryId: number;
+  private currentRecordingId: number;
 
   constructor() {
     this.users = new Map();
@@ -103,11 +111,19 @@ export class MemStorage implements IStorage {
     this.zones = new Map();
     this.alerts = new Map();
     this.employees = new Map();
+    this.subscriptionPlans = new Map();
+    this.demoRequests = new Map();
+    this.searchQueries = new Map();
+    this.recordings = new Map();
     this.currentUserId = 1;
     this.currentCameraId = 1;
     this.currentZoneId = 1;
     this.currentAlertId = 1;
     this.currentEmployeeId = 1;
+    this.currentSubscriptionPlanId = 1;
+    this.currentDemoRequestId = 1;
+    this.currentSearchQueryId = 1;
+    this.currentRecordingId = 1;
     
     this.initializeData();
   }
@@ -456,6 +472,151 @@ export class MemStorage implements IStorage {
       this.systemSettings = { ...this.systemSettings, ...updateData };
     }
     return this.systemSettings;
+  }
+
+  // Subscription Plans methods
+  async getAllSubscriptionPlans(): Promise<SubscriptionPlan[]> {
+    return Array.from(this.subscriptionPlans.values());
+  }
+
+  async getSubscriptionPlan(id: number): Promise<SubscriptionPlan | undefined> {
+    return this.subscriptionPlans.get(id);
+  }
+
+  async createSubscriptionPlan(insertPlan: InsertSubscriptionPlan): Promise<SubscriptionPlan> {
+    const plan: SubscriptionPlan = { 
+      id: this.currentSubscriptionPlanId++, 
+      ...insertPlan,
+      features: insertPlan.features || [],
+      popular: insertPlan.popular || false
+    };
+    this.subscriptionPlans.set(plan.id, plan);
+    return plan;
+  }
+
+  async updateSubscriptionPlan(id: number, updateData: Partial<InsertSubscriptionPlan>): Promise<SubscriptionPlan | undefined> {
+    const plan = this.subscriptionPlans.get(id);
+    if (!plan) return undefined;
+    
+    const updatedPlan = { ...plan, ...updateData };
+    this.subscriptionPlans.set(id, updatedPlan);
+    return updatedPlan;
+  }
+
+  // Demo Requests methods
+  async createDemoRequest(insertRequest: InsertDemoRequest): Promise<DemoRequest> {
+    const request: DemoRequest = { 
+      id: this.currentDemoRequestId++, 
+      ...insertRequest,
+      status: insertRequest.status || 'pending',
+      createdAt: new Date()
+    };
+    this.demoRequests.set(request.id, request);
+    return request;
+  }
+
+  async getAllDemoRequests(): Promise<DemoRequest[]> {
+    return Array.from(this.demoRequests.values());
+  }
+
+  async updateDemoRequest(id: number, updateData: Partial<InsertDemoRequest>): Promise<DemoRequest | undefined> {
+    const request = this.demoRequests.get(id);
+    if (!request) return undefined;
+    
+    const updatedRequest = { ...request, ...updateData };
+    this.demoRequests.set(id, updatedRequest);
+    return updatedRequest;
+  }
+
+  // Search Queries methods
+  async createSearchQuery(insertQuery: InsertSearchQuery): Promise<SearchQuery> {
+    const query: SearchQuery = { 
+      id: this.currentSearchQueryId++, 
+      ...insertQuery,
+      createdAt: new Date()
+    };
+    this.searchQueries.set(query.id, query);
+    return query;
+  }
+
+  async getUserSearchQueries(userId: number): Promise<SearchQuery[]> {
+    return Array.from(this.searchQueries.values()).filter(q => q.userId === userId);
+  }
+
+  // Recordings methods
+  async getRecording(id: number): Promise<Recording | undefined> {
+    return this.recordings.get(id);
+  }
+
+  async getAllRecordings(): Promise<Recording[]> {
+    return Array.from(this.recordings.values());
+  }
+
+  async getRecordingsByCamera(cameraId: number): Promise<Recording[]> {
+    return Array.from(this.recordings.values()).filter(r => r.cameraId === cameraId);
+  }
+
+  async getRecordingsByDateRange(startDate: Date, endDate: Date): Promise<Recording[]> {
+    return Array.from(this.recordings.values()).filter(r => {
+      const recordingDate = new Date(r.timestamp);
+      return recordingDate >= startDate && recordingDate <= endDate;
+    });
+  }
+
+  async getRecordingsByFilters(filters: {
+    cameraId?: number;
+    startDate?: Date;
+    endDate?: Date;
+    quality?: string;
+    hasMotion?: boolean;
+  }): Promise<Recording[]> {
+    let recordings = Array.from(this.recordings.values());
+
+    if (filters.cameraId) {
+      recordings = recordings.filter(r => r.cameraId === filters.cameraId);
+    }
+
+    if (filters.startDate && filters.endDate) {
+      recordings = recordings.filter(r => {
+        const recordingDate = new Date(r.timestamp);
+        return recordingDate >= filters.startDate! && recordingDate <= filters.endDate!;
+      });
+    }
+
+    if (filters.quality) {
+      recordings = recordings.filter(r => r.quality === filters.quality);
+    }
+
+    if (filters.hasMotion !== undefined) {
+      recordings = recordings.filter(r => r.hasMotion === filters.hasMotion);
+    }
+
+    return recordings;
+  }
+
+  async createRecording(insertRecording: InsertRecording): Promise<Recording> {
+    const recording: Recording = { 
+      id: this.currentRecordingId++, 
+      ...insertRecording,
+      timestamp: insertRecording.timestamp || new Date(),
+      size: insertRecording.size || 0,
+      hasMotion: insertRecording.hasMotion || false
+    };
+    this.recordings.set(recording.id, recording);
+    return recording;
+  }
+
+  async updateRecording(id: number, updateData: Partial<InsertRecording>): Promise<Recording | undefined> {
+    const recording = this.recordings.get(id);
+    if (!recording) return undefined;
+    
+    const updatedRecording = { ...recording, ...updateData };
+    this.recordings.set(id, updatedRecording);
+    return updatedRecording;
+  }
+
+  async deleteRecording(id: number): Promise<boolean> {
+    return this.recordings.delete(id);
   }
 }
 
