@@ -1,6 +1,9 @@
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
-import { Video, AlertTriangle, Bell, Map, TrendingUp, TrendingDown } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Video, AlertTriangle, Bell, Map, TrendingUp, TrendingDown, Play, Trophy } from "lucide-react";
+import { OnboardingTutorial } from "@/components/onboarding-tutorial";
 
 interface DashboardStats {
   activeCameras: number;
@@ -16,6 +19,8 @@ interface DashboardStats {
 }
 
 export default function Dashboard() {
+  const [showTutorial, setShowTutorial] = useState(false);
+  
   const { data: stats, isLoading } = useQuery<DashboardStats>({
     queryKey: ["/api/stats"],
   });
@@ -48,6 +53,23 @@ export default function Dashboard() {
           <div>
             <h1 className="text-3xl font-bold mb-2">Piloo.ai Dashboard</h1>
             <p className="text-blue-100 text-lg">AI-powered surveillance monitoring and analytics</p>
+          </div>
+          <div className="flex gap-3">
+            <Button
+              onClick={() => setShowTutorial(true)}
+              className="bg-white/20 hover:bg-white/30 text-white border-white/30"
+              variant="outline"
+            >
+              <Play className="h-4 w-4 mr-2" />
+              Start Tutorial
+            </Button>
+            <Button
+              onClick={() => window.location.href = '/onboarding'}
+              className="bg-yellow-500 hover:bg-yellow-600 text-black"
+            >
+              <Trophy className="h-4 w-4 mr-2" />
+              View Progress
+            </Button>
           </div>
           <div className="text-right">
             <div className="text-2xl font-bold">{new Date().toLocaleDateString()}</div>
@@ -164,6 +186,13 @@ export default function Dashboard() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Onboarding Tutorial Modal */}
+      <OnboardingTutorial 
+        isOpen={showTutorial}
+        onComplete={() => setShowTutorial(false)}
+        onSkip={() => setShowTutorial(false)}
+      />
     </div>
   );
 }
