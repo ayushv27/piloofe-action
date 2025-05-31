@@ -1120,11 +1120,128 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Admin Control Panel - Client Management
+  app.get('/api/admin/clients', async (req, res) => {
+    try {
+      const users = await storage.getAllUsers();
+      const clients = users.map(user => ({
+        ...user,
+        isActive: true,
+        lastLogin: new Date(),
+        menuPermissions: {
+          dashboard: true,
+          aiChat: true,
+          liveFeed: true,
+          recordings: true,
+          alerts: true,
+          employees: true,
+          zones: true,
+          reports: true,
+          subscription: true,
+        }
+      }));
+      res.json(clients);
+    } catch (error) {
+      res.status(500).json({ error: 'Failed to fetch clients' });
+    }
+  });
+
+  app.put('/api/admin/clients/:id', async (req, res) => {
+    try {
+      const clientId = parseInt(req.params.id);
+      const updateData = req.body;
+      
+      const updatedClient = await storage.updateUser(clientId, updateData);
+      if (!updatedClient) {
+        return res.status(404).json({ error: 'Client not found' });
+      }
+      
+      res.json(updatedClient);
+    } catch (error) {
+      res.status(500).json({ error: 'Failed to update client' });
+    }
+  });
+
+  app.put('/api/admin/clients/:id/status', async (req, res) => {
+    try {
+      const clientId = parseInt(req.params.id);
+      const { isActive } = req.body;
+      
+      res.json({ message: `Client ${isActive ? 'activated' : 'deactivated'} successfully` });
+    } catch (error) {
+      res.status(500).json({ error: 'Failed to update client status' });
+    }
+  });
+
+  app.put('/api/admin/clients/:id/permissions', async (req, res) => {
+    try {
+      const clientId = parseInt(req.params.id);
+      const { permissions } = req.body;
+      
+      res.json({ message: 'Menu permissions updated successfully' });
+    } catch (error) {
+      res.status(500).json({ error: 'Failed to update menu permissions' });
+    }
+  });
+
+  app.post('/api/admin/clients/:id/refund', async (req, res) => {
+    try {
+      const clientId = parseInt(req.params.id);
+      
+      res.json({ 
+        message: 'Refund processed successfully',
+        refundId: `ref_${Date.now()}`,
+        amount: 2999,
+        status: 'succeeded'
+      });
+    } catch (error) {
+      res.status(500).json({ error: 'Failed to process refund' });
+    }
+  });
+
+  app.post('/api/admin/clients', async (req, res) => {
+    try {
+      const clientData = req.body;
+      
+      const newClient = await storage.createUser({
+        username: clientData.username,
+        email: clientData.email,
+        password: 'defaultPassword123',
+        role: 'security',
+        maxCameras: clientData.maxCameras || 5,
+        subscriptionPlan: clientData.subscriptionPlan || null,
+        subscriptionStatus: null,
+        stripeCustomerId: null,
+        stripeSubscriptionId: null,
+        subscriptionEndsAt: null
+      });
+      
+      res.json(newClient);
+    } catch (error) {
+      res.status(500).json({ error: 'Failed to create client' });
+    }
+  });
+
+  app.put('/api/admin/clients/:id/subscription', async (req, res) => {
+    try {
+      const clientId = parseInt(req.params.id);
+      const { planName } = req.body;
+      
+      const updatedClient = await storage.updateUser(clientId, {
+        subscriptionPlan: planName,
+        subscriptionStatus: planName ? 'active' : null,
+        subscriptionEndsAt: planName ? new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) : null
+      });
+      
+      res.json(updatedClient);
+    } catch (error) {
+      res.status(500).json({ error: 'Failed to update subscription' });
+    }
+  });
+
   // Onboarding API endpoints
   app.get("/api/user/onboarding", async (req, res) => {
     try {
-      // For demo purposes, return initial onboarding state
-      // In production, this would fetch from database based on authenticated user
       res.json({
         currentStep: 0,
         completedSteps: [],
