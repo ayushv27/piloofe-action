@@ -12,12 +12,14 @@ import {
   ShieldX, 
   BarChart3,
   Search,
+  FileVideo,
   LogOut 
 } from "lucide-react";
 
 const navigation = [
   { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   { name: "Live CCTV Feed", href: "/live-feed", icon: Video },
+  { name: "Recordings Archive", href: "/recordings", icon: FileVideo },
   { name: "Event Alerts", href: "/alerts", icon: AlertTriangle },
   { name: "AI Search", href: "/search", icon: Search },
   { name: "Employee Monitoring", href: "/employees", icon: Users },

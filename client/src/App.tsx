@@ -13,6 +13,7 @@ import Signup from "@/pages/signup";
 import Login from "@/pages/login";
 import Dashboard from "@/pages/dashboard";
 import LiveFeed from "@/pages/live-feed";
+import Recordings from "@/pages/recordings";
 import EventAlerts from "@/pages/alerts";
 import EmployeeMonitoring from "@/pages/employees";
 import ZoneSetup from "@/pages/zone-setup";

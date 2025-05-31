@@ -26,6 +26,24 @@ export const cameras = pgTable("cameras", {
   status: text("status").notNull().default("active"), // active, maintenance, offline
   assignedZone: text("assigned_zone"),
   sensitivity: integer("sensitivity").default(7),
+  recordingEnabled: boolean("recording_enabled").default(true),
+  retentionDays: integer("retention_days").default(15),
+});
+
+export const recordings = pgTable("recordings", {
+  id: serial("id").primaryKey(),
+  cameraId: integer("camera_id").references(() => cameras.id).notNull(),
+  filename: text("filename").notNull(),
+  filePath: text("file_path").notNull(),
+  startTime: timestamp("start_time").notNull(),
+  endTime: timestamp("end_time").notNull(),
+  duration: integer("duration").notNull(), // in seconds
+  fileSize: integer("file_size").notNull(), // in bytes
+  quality: text("quality").notNull().default("720p"), // 480p, 720p, 1080p
+  hasMotion: boolean("has_motion").default(false),
+  hasAudio: boolean("has_audio").default(true),
+  thumbnailPath: text("thumbnail_path"),
+  createdAt: timestamp("created_at").defaultNow(),
 });
 
 export const zones = pgTable("zones", {
@@ -131,6 +149,11 @@ export const insertSystemSettingsSchema = createInsertSchema(systemSettings).omi
   id: true,
 });
 
+export const insertRecordingSchema = createInsertSchema(recordings).omit({
+  id: true,
+  createdAt: true,
+});
+
 export const insertSubscriptionPlanSchema = createInsertSchema(subscriptionPlans).omit({
   id: true,
   createdAt: true,
@@ -158,6 +181,8 @@ export type Employee = typeof employees.$inferSelect;
 export type InsertEmployee = z.infer<typeof insertEmployeeSchema>;
 export type SystemSettings = typeof systemSettings.$inferSelect;
 export type InsertSystemSettings = z.infer<typeof insertSystemSettingsSchema>;
+export type Recording = typeof recordings.$inferSelect;
+export type InsertRecording = z.infer<typeof insertRecordingSchema>;
 export type SubscriptionPlan = typeof subscriptionPlans.$inferSelect;
 export type InsertSubscriptionPlan = z.infer<typeof insertSubscriptionPlanSchema>;
 export type DemoRequest = typeof demoRequests.$inferSelect;
