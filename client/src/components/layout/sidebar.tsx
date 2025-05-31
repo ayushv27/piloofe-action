@@ -25,6 +25,7 @@ import {
 
 const navigation = [
   { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
+  { name: "Tutorial Guide", href: "/onboarding", icon: GraduationCap },
   { name: "Ask My CCTV", href: "/ai-chat", icon: Sparkles },
   { name: "Live CCTV Feed", href: "/live-feed", icon: Video },
   { name: "Recordings Archive", href: "/recordings", icon: FileVideo },
