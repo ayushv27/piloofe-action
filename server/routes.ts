@@ -1120,6 +1120,61 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Onboarding API endpoints
+  app.get("/api/user/onboarding", async (req, res) => {
+    try {
+      if (!req.session?.userId) {
+        return res.status(401).json({ error: "Not authenticated" });
+      }
+
+      // For demo purposes, return initial onboarding state
+      // In production, this would fetch from database
+      res.json({
+        currentStep: 0,
+        completedSteps: [],
+        totalPoints: 0,
+        achievements: []
+      });
+    } catch (error) {
+      console.error("Error fetching onboarding progress:", error);
+      res.status(500).json({ error: "Failed to fetch onboarding progress" });
+    }
+  });
+
+  app.post("/api/user/onboarding/complete", async (req, res) => {
+    try {
+      if (!req.session?.userId) {
+        return res.status(401).json({ error: "Not authenticated" });
+      }
+
+      const { stepId } = req.body;
+      
+      // Define step points
+      const stepPoints = {
+        welcome: 10,
+        dashboard: 20,
+        cameras: 30,
+        alerts: 25,
+        'ai-chat': 35,
+        employees: 20,
+        settings: 15
+      };
+
+      const points = stepPoints[stepId] || 0;
+
+      // In production, this would update the database
+      // For demo, just return success with points earned
+      res.json({
+        message: "Step completed successfully",
+        stepId,
+        pointsEarned: points
+      });
+    } catch (error) {
+      console.error("Error completing onboarding step:", error);
+      res.status(500).json({ error: "Failed to complete onboarding step" });
+    }
+  });
+
   const httpServer = createServer(app);
   
   // Setup WebSocket server

@@ -19,7 +19,8 @@ import {
   Menu,
   X,
   Sparkles,
-  Crown
+  Crown,
+  GraduationCap
 } from "lucide-react";
 
 const navigation = [
