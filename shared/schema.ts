@@ -196,3 +196,71 @@ export type DemoRequest = typeof demoRequests.$inferSelect;
 export type InsertDemoRequest = z.infer<typeof insertDemoRequestSchema>;
 export type SearchQuery = typeof searchQueries.$inferSelect;
 export type InsertSearchQuery = z.infer<typeof insertSearchQuerySchema>;
+
+// User onboarding progress and gamification
+export const userProgress = pgTable("user_progress", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull(),
+  currentStep: integer("current_step").notNull().default(1),
+  completedSteps: jsonb("completed_steps").notNull().default([]),
+  totalPoints: integer("total_points").notNull().default(0),
+  achievements: jsonb("achievements").notNull().default([]),
+  tutorialCompleted: boolean("tutorial_completed").notNull().default(false),
+  lastActiveStep: text("last_active_step"),
+  onboardingStarted: timestamp("onboarding_started").defaultNow(),
+  onboardingCompleted: timestamp("onboarding_completed"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const onboardingSteps = pgTable("onboarding_steps", {
+  id: serial("id").primaryKey(),
+  stepNumber: integer("step_number").notNull(),
+  title: text("title").notNull(),
+  description: text("description").notNull(),
+  targetPage: text("target_page").notNull(),
+  targetElement: text("target_element"),
+  instructions: text("instructions").notNull(),
+  points: integer("points").notNull().default(10),
+  isRequired: boolean("is_required").notNull().default(true),
+  category: text("category").notNull(),
+  estimatedTime: integer("estimated_time"), // in minutes
+  videoUrl: text("video_url"),
+  isActive: boolean("is_active").notNull().default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const achievements = pgTable("achievements", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  description: text("description").notNull(),
+  icon: text("icon").notNull(),
+  points: integer("points").notNull(),
+  category: text("category").notNull(),
+  condition: jsonb("condition").notNull(), // JSON describing unlock condition
+  isActive: boolean("is_active").notNull().default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertUserProgressSchema = createInsertSchema(userProgress).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertOnboardingStepSchema = createInsertSchema(onboardingSteps).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertAchievementSchema = createInsertSchema(achievements).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type UserProgress = typeof userProgress.$inferSelect;
+export type InsertUserProgress = z.infer<typeof insertUserProgressSchema>;
+export type OnboardingStep = typeof onboardingSteps.$inferSelect;
+export type InsertOnboardingStep = z.infer<typeof insertOnboardingStepSchema>;
+export type Achievement = typeof achievements.$inferSelect;
+export type InsertAchievement = z.infer<typeof insertAchievementSchema>;

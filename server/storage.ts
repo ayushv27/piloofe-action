@@ -7,11 +7,14 @@
 
 import { 
   users, cameras, zones, alerts, employees, systemSettings, recordings, subscriptionPlans, demoRequests, searchQueries,
+  userProgress, onboardingSteps, achievements,
   type User, type InsertUser, type Camera, type InsertCamera,
   type Zone, type InsertZone, type Alert, type InsertAlert,
   type Employee, type InsertEmployee, type SystemSettings, type InsertSystemSettings,
   type Recording, type InsertRecording, type SubscriptionPlan, type InsertSubscriptionPlan, 
-  type DemoRequest, type InsertDemoRequest, type SearchQuery, type InsertSearchQuery
+  type DemoRequest, type InsertDemoRequest, type SearchQuery, type InsertSearchQuery,
+  type UserProgress, type InsertUserProgress, type OnboardingStep, type InsertOnboardingStep,
+  type Achievement, type InsertAchievement
 } from "@shared/schema";
 import { db } from "./db";
 import { eq } from "drizzle-orm";
@@ -39,6 +42,23 @@ export interface IStorage {
   // Search Queries
   createSearchQuery(query: InsertSearchQuery): Promise<SearchQuery>;
   getUserSearchQueries(userId: number): Promise<SearchQuery[]>;
+  
+  // User Progress and Gamification
+  getUserProgress(userId: number): Promise<UserProgress | undefined>;
+  createUserProgress(progress: InsertUserProgress): Promise<UserProgress>;
+  updateUserProgress(userId: number, progress: Partial<InsertUserProgress>): Promise<UserProgress | undefined>;
+  completeOnboardingStep(userId: number, stepId: number): Promise<UserProgress | undefined>;
+  awardAchievement(userId: number, achievementId: number): Promise<UserProgress | undefined>;
+  
+  // Onboarding Steps
+  getAllOnboardingSteps(): Promise<OnboardingStep[]>;
+  getOnboardingStep(id: number): Promise<OnboardingStep | undefined>;
+  getOnboardingStepsByCategory(category: string): Promise<OnboardingStep[]>;
+  
+  // Achievements
+  getAllAchievements(): Promise<Achievement[]>;
+  getAchievement(id: number): Promise<Achievement | undefined>;
+  getAchievementsByCategory(category: string): Promise<Achievement[]>;
   
   // Cameras
   getCamera(id: number): Promise<Camera | undefined>;
@@ -101,6 +121,9 @@ export class MemStorage implements IStorage {
   private demoRequests: Map<number, DemoRequest>;
   private searchQueries: Map<number, SearchQuery>;
   private recordings: Map<number, Recording>;
+  private userProgress: Map<number, UserProgress>;
+  private onboardingSteps: Map<number, OnboardingStep>;
+  private achievements: Map<number, Achievement>;
   private systemSettings: SystemSettings | undefined;
   private currentUserId: number;
   private currentCameraId: number;
@@ -111,6 +134,9 @@ export class MemStorage implements IStorage {
   private currentDemoRequestId: number;
   private currentSearchQueryId: number;
   private currentRecordingId: number;
+  private currentUserProgressId: number;
+  private currentOnboardingStepId: number;
+  private currentAchievementId: number;
 
   constructor() {
     this.users = new Map();
