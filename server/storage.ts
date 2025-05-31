@@ -1,3 +1,10 @@
+/**
+ * Piloo.ai - AI-Powered CCTV Monitoring Platform
+ * Copyright (c) 2025 Pyrack Solutions Pvt. Ltd.
+ * Website: https://pyrack.com/
+ * Licensed under the MIT License
+ */
+
 import { 
   users, cameras, zones, alerts, employees, systemSettings, recordings, subscriptionPlans, demoRequests, searchQueries,
   type User, type InsertUser, type Camera, type InsertCamera,
