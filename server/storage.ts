@@ -253,6 +253,40 @@ export class MemStorage implements IStorage {
       status: "active",
       date: today
     });
+
+    // Initialize subscription plans
+    this.createSubscriptionPlan({
+      name: "Basic",
+      monthlyPrice: "29",
+      yearlyPrice: "290",
+      maxCameras: 5,
+      features: ["5 cameras", "Motion detection", "30-day cloud storage", "Email alerts", "Mobile app access"],
+      description: "Perfect for small businesses and home use",
+      isPopular: false,
+      isActive: true
+    });
+
+    this.createSubscriptionPlan({
+      name: "Professional",
+      monthlyPrice: "79",
+      yearlyPrice: "790", 
+      maxCameras: 15,
+      features: ["15 cameras", "AI-powered analytics", "90-day cloud storage", "Real-time alerts", "Priority support", "Advanced reporting"],
+      description: "Ideal for growing businesses",
+      isPopular: true,
+      isActive: true
+    });
+
+    this.createSubscriptionPlan({
+      name: "Enterprise",
+      monthlyPrice: "199",
+      yearlyPrice: "1990",
+      maxCameras: 50,
+      features: ["50 cameras", "Custom AI models", "Unlimited cloud storage", "24/7 phone support", "API access", "White-label solution"],
+      description: "For large organizations and enterprises",
+      isPopular: false,
+      isActive: true
+    });
   }
 
   // User methods
