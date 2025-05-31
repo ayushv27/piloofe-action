@@ -1,8 +1,8 @@
 # Piloo.ai Deployment Guide
 
-**Copyright (c) 2025 Pyrack Solutions Pvt. Ltd.**  
+**Copyright © 2025 Pyrack Solutions Pvt. Ltd.**  
 **Website: https://pyrack.com/**  
-**Licensed under the MIT License**
+**All rights reserved. Proprietary software.**
 
 This guide provides step-by-step instructions for deploying the Piloo.ai CCTV monitoring platform using Docker on Ubuntu servers.
 
