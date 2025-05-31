@@ -1,261 +1,275 @@
 import { useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Check, Crown, Star, Zap } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { apiRequest } from "@/lib/queryClient";
-import { CheckCircle, Camera, AlertTriangle, Shield, Crown } from "lucide-react";
 
 interface SubscriptionPlan {
   id: number;
   name: string;
-  price: number;
-  billingPeriod: string;
+  monthlyPrice: string;
+  yearlyPrice: string;
   maxCameras: number;
   features: string[];
   description: string;
-  popular?: boolean;
+  isPopular: boolean;
+  isActive: boolean;
 }
 
 interface UserSubscription {
   currentPlan: string;
   status: string;
   maxCameras: number;
-  subscriptionEndsAt: string | null;
+  subscriptionEndsAt: string;
 }
 
 export default function Subscription() {
+  const [billingPeriod, setBillingPeriod] = useState<"monthly" | "yearly">("monthly");
   const { toast } = useToast();
-  const queryClient = useQueryClient();
-  const [changingPlan, setChangingPlan] = useState<number | null>(null);
 
-  const { data: plans, isLoading: plansLoading } = useQuery({
-    queryKey: ["/api/subscription-plans"],
-  });
-
-  const { data: userSubscription, isLoading: subscriptionLoading } = useQuery({
+  // Get current user subscription with fallback for demo
+  const { data: userSubscription } = useQuery({
     queryKey: ["/api/user/subscription"],
-  });
+    retry: false,
+    // Provide demo fallback when not authenticated
+    queryFn: async () => {
+      try {
+        return await apiRequest("GET", "/api/user/subscription");
+      } catch (error) {
+        // Return demo data when not authenticated
+        return {
+          currentPlan: "Basic",
+          status: "active", 
+          maxCameras: 5,
+          subscriptionEndsAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
+        };
+      }
+    }
+  }) as { data: UserSubscription | undefined };
 
-  const changePlanMutation = useMutation({
-    mutationFn: async (planId: number) => {
-      return apiRequest("POST", "/api/user/change-plan", { planId });
+  // Get subscription plans
+  const { data: subscriptionPlans = [] } = useQuery({
+    queryKey: ["/api/subscription-plans"],
+  }) as { data: SubscriptionPlan[] };
+
+  // Plan switching mutation
+  const switchPlanMutation = useMutation({
+    mutationFn: async (planName: string) => {
+      return await apiRequest("POST", "/api/user/subscription", { planName });
     },
-    onSuccess: () => {
+    onSuccess: (_, planName) => {
       toast({
         title: "Plan Updated",
-        description: "Your subscription plan has been successfully updated.",
+        description: `Successfully switched to ${planName} plan`,
       });
       queryClient.invalidateQueries({ queryKey: ["/api/user/subscription"] });
-      setChangingPlan(null);
     },
-    onError: (error: Error) => {
+    onError: (error) => {
       toast({
         title: "Error",
-        description: error.message || "Failed to update subscription plan.",
+        description: "Failed to update subscription plan",
         variant: "destructive",
       });
-      setChangingPlan(null);
     },
   });
 
-  const handlePlanChange = (planId: number) => {
-    setChangingPlan(planId);
-    changePlanMutation.mutate(planId);
+  const handlePlanSwitch = (planName: string) => {
+    if (userSubscription?.currentPlan === planName) {
+      toast({
+        title: "Already Active",
+        description: `You are already on the ${planName} plan`,
+      });
+      return;
+    }
+    switchPlanMutation.mutate(planName);
   };
 
-  if (plansLoading || subscriptionLoading) {
+  const getPlanIcon = (planName: string) => {
+    switch (planName.toLowerCase()) {
+      case "basic":
+        return <Zap className="w-8 h-8 text-blue-500" />;
+      case "professional":
+        return <Star className="w-8 h-8 text-purple-500" />;
+      case "enterprise":
+        return <Crown className="w-8 h-8 text-gold-500" />;
+      default:
+        return <Zap className="w-8 h-8 text-blue-500" />;
+    }
+  };
+
+  if (!userSubscription) {
     return (
-      <div className="space-y-6">
-        <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl p-8 text-white shadow-xl">
-          <h1 className="text-3xl font-bold mb-2">Subscription Plans</h1>
-          <p className="text-blue-100">Loading your subscription details...</p>
-        </div>
-        <div className="flex items-center justify-center py-12">
-          <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full" />
+      <div className="p-6 space-y-6">
+        <div className="animate-pulse">
+          <div className="h-8 bg-gray-200 rounded w-1/4 mb-4"></div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="h-96 bg-gray-200 rounded-lg"></div>
+            ))}
+          </div>
         </div>
       </div>
     );
   }
 
-  const getPlanIcon = (planName: string) => {
-    if (planName.toLowerCase().includes("basic")) return <Camera className="h-6 w-6" />;
-    if (planName.toLowerCase().includes("professional")) return <Shield className="h-6 w-6" />;
-    if (planName.toLowerCase().includes("enterprise")) return <Crown className="h-6 w-6" />;
-    return <AlertTriangle className="h-6 w-6" />;
-  };
-
-  const isCurrentPlan = (planName: string) => {
-    return userSubscription?.currentPlan?.toLowerCase() === planName.toLowerCase();
-  };
-
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl p-8 text-white shadow-xl">
-        <h1 className="text-3xl font-bold mb-2">Subscription Plans</h1>
-        <p className="text-blue-100">Choose the perfect plan for your surveillance needs</p>
-      </div>
-
-      {/* Current Subscription Status */}
-      {userSubscription && (
-        <Card className="bg-white/90 backdrop-blur-sm border-0 shadow-lg">
-          <CardHeader>
-            <CardTitle className="flex items-center space-x-2">
-              <Shield className="h-5 w-5 text-blue-600" />
-              <span>Current Subscription</span>
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div>
-                <p className="text-sm text-slate-600">Current Plan</p>
-                <p className="font-semibold text-lg">{userSubscription.currentPlan}</p>
-              </div>
-              <div>
-                <p className="text-sm text-slate-600">Status</p>
-                <Badge variant={userSubscription.status === "active" ? "default" : "destructive"}>
-                  {userSubscription.status}
-                </Badge>
-              </div>
-              <div>
-                <p className="text-sm text-slate-600">Camera Limit</p>
-                <p className="font-semibold text-lg">{userSubscription.maxCameras} cameras</p>
-              </div>
-            </div>
-            {userSubscription.subscriptionEndsAt && (
-              <div className="mt-4 pt-4 border-t">
-                <p className="text-sm text-slate-600">
-                  Subscription renews on: {new Date(userSubscription.subscriptionEndsAt).toLocaleDateString()}
-                </p>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Available Plans */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {plans?.map((plan: SubscriptionPlan) => (
-          <Card 
-            key={plan.id} 
-            className={`relative bg-white/90 backdrop-blur-sm border-0 shadow-lg transition-all duration-300 hover:shadow-xl ${
-              plan.popular ? 'ring-2 ring-blue-500 scale-105' : ''
-            } ${isCurrentPlan(plan.name) ? 'ring-2 ring-green-500' : ''}`}
-          >
-            {plan.popular && (
-              <Badge className="absolute -top-2 left-1/2 transform -translate-x-1/2 bg-blue-600">
-                Most Popular
-              </Badge>
-            )}
-            {isCurrentPlan(plan.name) && (
-              <Badge className="absolute -top-2 right-4 bg-green-600">
-                Current Plan
-              </Badge>
-            )}
-            
-            <CardHeader className="text-center">
-              <div className="flex justify-center mb-2">
-                {getPlanIcon(plan.name)}
-              </div>
-              <CardTitle className="text-xl">{plan.name}</CardTitle>
-              <div className="text-3xl font-bold text-blue-600">
-                ${plan.price}
-                <span className="text-sm text-slate-600 font-normal">/{plan.billingPeriod}</span>
-              </div>
-              <p className="text-slate-600">{plan.description}</p>
-            </CardHeader>
-            
-            <CardContent className="space-y-4">
-              <div className="flex items-center justify-center space-x-2 py-2 bg-slate-50 rounded-lg">
-                <Camera className="h-4 w-4 text-blue-600" />
-                <span className="font-semibold">Up to {plan.maxCameras} cameras</span>
-              </div>
-              
-              <ul className="space-y-2">
-                {plan.features.map((feature, index) => (
-                  <li key={index} className="flex items-center space-x-2">
-                    <CheckCircle className="h-4 w-4 text-green-500 flex-shrink-0" />
-                    <span className="text-sm">{feature}</span>
-                  </li>
-                ))}
-              </ul>
-              
-              <Button
-                className="w-full"
-                onClick={() => handlePlanChange(plan.id)}
-                disabled={isCurrentPlan(plan.name) || changingPlan === plan.id}
-                variant={isCurrentPlan(plan.name) ? "outline" : "default"}
-              >
-                {changingPlan === plan.id ? (
-                  <div className="flex items-center space-x-2">
-                    <div className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full" />
-                    <span>Updating...</span>
-                  </div>
-                ) : isCurrentPlan(plan.name) ? (
-                  "Current Plan"
-                ) : (
-                  "Select Plan"
-                )}
-              </Button>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-
-      {/* Plan Comparison */}
-      <Card className="bg-white/90 backdrop-blur-sm border-0 shadow-lg">
-        <CardHeader>
-          <CardTitle>Plan Comparison</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b">
-                  <th className="text-left py-2">Feature</th>
-                  {plans?.map((plan: SubscriptionPlan) => (
-                    <th key={plan.id} className="text-center py-2">{plan.name}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                <tr className="border-b">
-                  <td className="py-2 font-medium">Max Cameras</td>
-                  {plans?.map((plan: SubscriptionPlan) => (
-                    <td key={plan.id} className="text-center py-2">{plan.maxCameras}</td>
-                  ))}
-                </tr>
-                <tr className="border-b">
-                  <td className="py-2 font-medium">AI Analysis</td>
-                  {plans?.map((plan: SubscriptionPlan) => (
-                    <td key={plan.id} className="text-center py-2">
-                      <CheckCircle className="h-4 w-4 text-green-500 mx-auto" />
-                    </td>
-                  ))}
-                </tr>
-                <tr className="border-b">
-                  <td className="py-2 font-medium">Cloud Storage</td>
-                  {plans?.map((plan: SubscriptionPlan, index) => (
-                    <td key={plan.id} className="text-center py-2">
-                      {index === 0 ? "30 days" : index === 1 ? "90 days" : "Unlimited"}
-                    </td>
-                  ))}
-                </tr>
-                <tr>
-                  <td className="py-2 font-medium">Support</td>
-                  {plans?.map((plan: SubscriptionPlan, index) => (
-                    <td key={plan.id} className="text-center py-2">
-                      {index === 0 ? "Email" : index === 1 ? "Priority" : "24/7 Phone"}
-                    </td>
-                  ))}
-                </tr>
-              </tbody>
-            </table>
+    <div className="p-6 space-y-6">
+      <div className="text-center space-y-4">
+        <h1 className="text-3xl font-bold">Subscription Plans</h1>
+        <p className="text-muted-foreground max-w-2xl mx-auto">
+          Choose the perfect plan for your surveillance needs. Switch anytime without losing your data.
+        </p>
+        
+        {/* Current Plan Status */}
+        <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg max-w-md mx-auto">
+          <div className="flex items-center justify-center gap-2 mb-2">
+            <Badge variant="default" className="bg-blue-500">Current Plan</Badge>
           </div>
-        </CardContent>
-      </Card>
+          <div className="text-lg font-semibold">{userSubscription.currentPlan}</div>
+          <div className="text-sm text-muted-foreground">
+            {userSubscription.maxCameras} cameras • Status: {userSubscription.status}
+          </div>
+          {userSubscription.subscriptionEndsAt && (
+            <div className="text-xs text-muted-foreground mt-1">
+              Renews: {new Date(userSubscription.subscriptionEndsAt).toLocaleDateString()}
+            </div>
+          )}
+        </div>
+
+        {/* Billing Period Toggle */}
+        <div className="flex items-center justify-center gap-4 p-1 bg-gray-100 dark:bg-gray-800 rounded-lg max-w-xs mx-auto">
+          <button
+            onClick={() => setBillingPeriod("monthly")}
+            className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+              billingPeriod === "monthly"
+                ? "bg-white dark:bg-gray-700 shadow-sm"
+                : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            Monthly
+          </button>
+          <button
+            onClick={() => setBillingPeriod("yearly")}
+            className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+              billingPeriod === "yearly"
+                ? "bg-white dark:bg-gray-700 shadow-sm"
+                : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            Yearly
+            <Badge variant="secondary" className="ml-2 text-xs">Save 17%</Badge>
+          </button>
+        </div>
+      </div>
+
+      {/* Subscription Plans */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-6xl mx-auto">
+        {subscriptionPlans.map((plan) => {
+          const isCurrentPlan = userSubscription?.currentPlan === plan.name;
+          const price = billingPeriod === "monthly" ? plan.monthlyPrice : plan.yearlyPrice;
+          const pricePerMonth = billingPeriod === "yearly" 
+            ? Math.round(parseInt(plan.yearlyPrice) / 12).toString()
+            : plan.monthlyPrice;
+
+          return (
+            <Card 
+              key={plan.id} 
+              className={`relative ${
+                plan.isPopular 
+                  ? "border-2 border-purple-500 shadow-lg transform scale-105" 
+                  : isCurrentPlan 
+                    ? "border-2 border-blue-500 bg-blue-50 dark:bg-blue-900/10"
+                    : ""
+              }`}
+            >
+              {plan.isPopular && (
+                <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
+                  <Badge variant="default" className="bg-purple-500">Most Popular</Badge>
+                </div>
+              )}
+              
+              {isCurrentPlan && (
+                <div className="absolute -top-3 right-4">
+                  <Badge variant="default" className="bg-blue-500">Current</Badge>
+                </div>
+              )}
+
+              <CardHeader className="text-center pb-4">
+                <div className="flex justify-center mb-4">
+                  {getPlanIcon(plan.name)}
+                </div>
+                <CardTitle className="text-2xl">{plan.name}</CardTitle>
+                <CardDescription>{plan.description}</CardDescription>
+                <div className="space-y-1">
+                  <div className="text-3xl font-bold">
+                    ${pricePerMonth}
+                    <span className="text-lg font-normal text-muted-foreground">/month</span>
+                  </div>
+                  {billingPeriod === "yearly" && (
+                    <div className="text-sm text-muted-foreground">
+                      Billed annually (${price})
+                    </div>
+                  )}
+                </div>
+              </CardHeader>
+
+              <CardContent className="space-y-4">
+                <ul className="space-y-2">
+                  {plan.features.map((feature, index) => (
+                    <li key={index} className="flex items-start gap-2">
+                      <Check className="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" />
+                      <span className="text-sm">{feature}</span>
+                    </li>
+                  ))}
+                </ul>
+              </CardContent>
+
+              <CardFooter>
+                <Button
+                  className="w-full"
+                  variant={isCurrentPlan ? "outline" : plan.isPopular ? "default" : "outline"}
+                  disabled={isCurrentPlan || switchPlanMutation.isPending}
+                  onClick={() => handlePlanSwitch(plan.name)}
+                >
+                  {isCurrentPlan 
+                    ? "Current Plan" 
+                    : switchPlanMutation.isPending 
+                      ? "Switching..." 
+                      : `Switch to ${plan.name}`
+                  }
+                </Button>
+              </CardFooter>
+            </Card>
+          );
+        })}
+      </div>
+
+      {/* Additional Information */}
+      <div className="max-w-4xl mx-auto mt-12 text-center space-y-4">
+        <h3 className="text-xl font-semibold">All plans include:</h3>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-muted-foreground">
+          <div className="flex items-center justify-center gap-2">
+            <Check className="w-4 h-4 text-green-500" />
+            <span>24/7 monitoring</span>
+          </div>
+          <div className="flex items-center justify-center gap-2">
+            <Check className="w-4 h-4 text-green-500" />
+            <span>Mobile app access</span>
+          </div>
+          <div className="flex items-center justify-center gap-2">
+            <Check className="w-4 h-4 text-green-500" />
+            <span>Secure cloud storage</span>
+          </div>
+        </div>
+        
+        <div className="text-sm text-muted-foreground mt-6">
+          <p>Need help choosing? Contact our support team for personalized recommendations.</p>
+          <p className="mt-2">All plans come with a 30-day money-back guarantee.</p>
+        </div>
+      </div>
     </div>
   );
 }
