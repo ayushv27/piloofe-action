@@ -1,596 +1,366 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { 
-  Users, 
-  Settings, 
-  CreditCard, 
-  Shield, 
-  Eye, 
-  EyeOff, 
-  Edit2, 
-  Trash2, 
-  Plus, 
-  RefreshCw, 
-  Mail, 
-  Phone, 
-  Calendar,
-  DollarSign,
-  Ban,
-  CheckCircle,
-  XCircle,
-  Crown
-} from "lucide-react";
+import { Slider } from "@/components/ui/slider";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Plus, Edit2, Trash2, Save } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
-import { useToast } from "@/hooks/use-toast";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import type { User, SystemSettings } from "@shared/schema";
 
-interface Client {
-  id: number;
-  username: string;
-  email: string;
-  role: string;
-  subscriptionPlan: string | null;
-  subscriptionStatus: string | null;
-  maxCameras: number | null;
-  stripeCustomerId: string | null;
-  stripeSubscriptionId: string | null;
-  subscriptionEndsAt: Date | null;
-  createdAt: Date | null;
-  lastLogin?: Date;
-  isActive: boolean;
-  menuPermissions: {
-    dashboard: boolean;
-    aiChat: boolean;
-    liveFeed: boolean;
-    recordings: boolean;
-    alerts: boolean;
-    employees: boolean;
-    zones: boolean;
-    reports: boolean;
-    subscription: boolean;
-  };
-}
-
-const clientSchema = z.object({
+const userSchema = z.object({
   username: z.string().min(1, "Username is required"),
   email: z.string().email("Invalid email address"),
-  subscriptionPlan: z.string().optional(),
-  maxCameras: z.number().min(1).max(50),
-  isActive: z.boolean(),
+  password: z.string().min(6, "Password must be at least 6 characters"),
+  role: z.enum(["admin", "security", "hr"]),
 });
 
-type ClientForm = z.infer<typeof clientSchema>;
+type UserForm = z.infer<typeof userSchema>;
 
-export default function AdminPanel() {
+export default function AdminSettings() {
   const queryClient = useQueryClient();
-  const { toast } = useToast();
-  const [selectedClient, setSelectedClient] = useState<Client | null>(null);
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [isAddClientOpen, setIsAddClientOpen] = useState(false);
-  const [viewMode, setViewMode] = useState<'grid' | 'table'>('table');
+  const [isAddUserOpen, setIsAddUserOpen] = useState(false);
+  const [editingUser, setEditingUser] = useState<User | null>(null);
 
-  // Fetch clients data
-  const { data: clients = [], isLoading: clientsLoading } = useQuery<Client[]>({
-    queryKey: ["/api/admin/clients"],
-    queryFn: async () => {
-      // For demo, return transformed user data
-      const users = await apiRequest("GET", "/api/users");
-      return users.map((user: any) => ({
-        ...user,
-        isActive: true,
-        lastLogin: new Date(),
-        menuPermissions: {
-          dashboard: true,
-          aiChat: true,
-          liveFeed: true,
-          recordings: true,
-          alerts: true,
-          employees: true,
-          zones: true,
-          reports: true,
-          subscription: true,
-        }
-      }));
-    }
+  const { data: users, isLoading: usersLoading } = useQuery<User[]>({
+    queryKey: ["/api/users"],
   });
 
-  const { data: subscriptionPlans = [] } = useQuery({
-    queryKey: ["/api/subscription-plans"],
+  const { data: settings, isLoading: settingsLoading } = useQuery<SystemSettings>({
+    queryKey: ["/api/settings"],
   });
 
-  // Form handling
-  const form = useForm<ClientForm>({
-    resolver: zodResolver(clientSchema),
+  const addUserMutation = useMutation({
+    mutationFn: async (userData: UserForm) => {
+      await apiRequest("POST", "/api/users", userData);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/users"] });
+      setIsAddUserOpen(false);
+      form.reset();
+    },
+  });
+
+  const updateUserMutation = useMutation({
+    mutationFn: async ({ id, userData }: { id: number; userData: Partial<UserForm> }) => {
+      await apiRequest("PUT", `/api/users/${id}`, userData);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/users"] });
+      setEditingUser(null);
+    },
+  });
+
+  const deleteUserMutation = useMutation({
+    mutationFn: async (id: number) => {
+      await apiRequest("DELETE", `/api/users/${id}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/users"] });
+    },
+  });
+
+  const updateSettingsMutation = useMutation({
+    mutationFn: async (settingsData: Partial<SystemSettings>) => {
+      await apiRequest("PUT", "/api/settings", settingsData);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/settings"] });
+    },
+  });
+
+  const form = useForm<UserForm>({
+    resolver: zodResolver(userSchema),
     defaultValues: {
       username: "",
       email: "",
-      maxCameras: 5,
-      isActive: true,
+      password: "",
+      role: "security",
     },
   });
 
-  // Mutations
-  const updateClientMutation = useMutation({
-    mutationFn: async ({ clientId, data }: { clientId: number; data: Partial<Client> }) => {
-      return await apiRequest("PUT", `/api/admin/clients/${clientId}`, data);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/admin/clients"] });
-      toast({ title: "Client updated successfully" });
-      setIsEditDialogOpen(false);
-    },
-  });
-
-  const toggleClientStatusMutation = useMutation({
-    mutationFn: async ({ clientId, isActive }: { clientId: number; isActive: boolean }) => {
-      return await apiRequest("PUT", `/api/admin/clients/${clientId}/status`, { isActive });
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/admin/clients"] });
-      toast({ 
-        title: `Client ${selectedClient?.isActive ? 'deactivated' : 'activated'} successfully` 
-      });
-    },
-  });
-
-  const refundClientMutation = useMutation({
-    mutationFn: async (clientId: number) => {
-      return await apiRequest("POST", `/api/admin/clients/${clientId}/refund`);
-    },
-    onSuccess: () => {
-      toast({ title: "Refund processed successfully" });
-    },
-  });
-
-  const updateMenuPermissionsMutation = useMutation({
-    mutationFn: async ({ clientId, permissions }: { clientId: number; permissions: any }) => {
-      return await apiRequest("PUT", `/api/admin/clients/${clientId}/permissions`, { permissions });
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/admin/clients"] });
-      toast({ title: "Menu permissions updated" });
-    },
-  });
-
-  // Helper functions
-  const getStatusBadge = (status: string | null) => {
-    switch (status) {
-      case 'active':
-        return <Badge className="bg-green-500">Active</Badge>;
-      case 'cancelled':
-        return <Badge className="bg-red-500">Cancelled</Badge>;
-      case 'past_due':
-        return <Badge className="bg-yellow-500">Past Due</Badge>;
-      default:
-        return <Badge variant="secondary">Free</Badge>;
-    }
+  const handleSettingChange = (key: keyof SystemSettings, value: any) => {
+    updateSettingsMutation.mutate({ [key]: value });
   };
 
-  const getPlanBadge = (plan: string | null) => {
-    switch (plan) {
-      case 'Professional':
-        return <Badge className="bg-blue-500"><Crown className="w-3 h-3 mr-1" />Pro</Badge>;
-      case 'Enterprise':
-        return <Badge className="bg-purple-500"><Crown className="w-3 h-3 mr-1" />Enterprise</Badge>;
-      default:
-        return <Badge variant="outline">Starter</Badge>;
-    }
-  };
-
-  const handleEditClient = (client: Client) => {
-    setSelectedClient(client);
-    form.reset({
-      username: client.username,
-      email: client.email,
-      subscriptionPlan: client.subscriptionPlan || undefined,
-      maxCameras: client.maxCameras || 5,
-      isActive: client.isActive,
-    });
-    setIsEditDialogOpen(true);
-  };
-
-  const handleMenuPermissionChange = (clientId: number, menu: string, enabled: boolean) => {
-    const client = clients.find(c => c.id === clientId);
-    if (client) {
-      const updatedPermissions = {
-        ...client.menuPermissions,
-        [menu]: enabled
-      };
-      updateMenuPermissionsMutation.mutate({ clientId, permissions: updatedPermissions });
-    }
-  };
-
-  if (clientsLoading) {
+  if (usersLoading || settingsLoading) {
     return <div className="flex items-center justify-center h-96">Loading...</div>;
   }
 
   return (
     <div className="space-y-6 p-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">Admin Control Panel</h1>
-          <p className="text-muted-foreground">Manage all clients, subscriptions, and system access</p>
-        </div>
-        <div className="flex gap-2">
-          <Button variant="outline" onClick={() => setViewMode(viewMode === 'table' ? 'grid' : 'table')}>
-            {viewMode === 'table' ? 'Grid View' : 'Table View'}
-          </Button>
-          <Dialog open={isAddClientOpen} onOpenChange={setIsAddClientOpen}>
-            <DialogTrigger asChild>
-              <Button>
-                <Plus className="w-4 h-4 mr-2" />
-                Add Client
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Add New Client</DialogTitle>
-              </DialogHeader>
-              <div className="space-y-4">
-                <div>
-                  <Label htmlFor="username">Username</Label>
-                  <Input {...form.register("username")} />
-                </div>
-                <div>
-                  <Label htmlFor="email">Email</Label>
-                  <Input {...form.register("email")} type="email" />
-                </div>
-                <div>
-                  <Label htmlFor="maxCameras">Max Cameras</Label>
-                  <Input {...form.register("maxCameras", { valueAsNumber: true })} type="number" />
-                </div>
-              </div>
-              <DialogFooter>
-                <Button variant="outline" onClick={() => setIsAddClientOpen(false)}>Cancel</Button>
-                <Button>Add Client</Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
-        </div>
-      </div>
-
-      <Tabs defaultValue="clients" className="space-y-4">
-        <TabsList>
-          <TabsTrigger value="clients">Client Management</TabsTrigger>
-          <TabsTrigger value="subscriptions">Subscriptions</TabsTrigger>
-          <TabsTrigger value="permissions">Menu Permissions</TabsTrigger>
-          <TabsTrigger value="system">System Settings</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="clients" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Client Overview</CardTitle>
-              <CardDescription>Manage all registered clients and their account status</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Client</TableHead>
-                    <TableHead>Plan</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Cameras</TableHead>
-                    <TableHead>Last Login</TableHead>
-                    <TableHead>Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {clients.map((client) => (
-                    <TableRow key={client.id}>
-                      <TableCell>
-                        <div className="flex items-center gap-3">
-                          <div className={`w-3 h-3 rounded-full ${client.isActive ? 'bg-green-500' : 'bg-red-500'}`} />
-                          <div>
-                            <div className="font-medium">{client.username}</div>
-                            <div className="text-sm text-muted-foreground">{client.email}</div>
-                          </div>
-                        </div>
-                      </TableCell>
-                      <TableCell>{getPlanBadge(client.subscriptionPlan)}</TableCell>
-                      <TableCell>{getStatusBadge(client.subscriptionStatus)}</TableCell>
-                      <TableCell>{client.maxCameras || 'Unlimited'}</TableCell>
-                      <TableCell>
-                        {client.lastLogin ? new Date(client.lastLogin).toLocaleDateString() : 'Never'}
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex gap-2">
-                          <Button variant="outline" size="sm" onClick={() => handleEditClient(client)}>
-                            <Edit2 className="w-4 h-4" />
-                          </Button>
-                          <AlertDialog>
-                            <AlertDialogTrigger asChild>
-                              <Button variant="outline" size="sm">
-                                {client.isActive ? <Ban className="w-4 h-4" /> : <CheckCircle className="w-4 h-4" />}
-                              </Button>
-                            </AlertDialogTrigger>
-                            <AlertDialogContent>
-                              <AlertDialogHeader>
-                                <AlertDialogTitle>
-                                  {client.isActive ? 'Deactivate' : 'Activate'} Client
-                                </AlertDialogTitle>
-                                <AlertDialogDescription>
-                                  Are you sure you want to {client.isActive ? 'deactivate' : 'activate'} {client.username}?
-                                </AlertDialogDescription>
-                              </AlertDialogHeader>
-                              <AlertDialogFooter>
-                                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                <AlertDialogAction 
-                                  onClick={() => toggleClientStatusMutation.mutate({ 
-                                    clientId: client.id, 
-                                    isActive: !client.isActive 
-                                  })}
-                                >
-                                  Confirm
-                                </AlertDialogAction>
-                              </AlertDialogFooter>
-                            </AlertDialogContent>
-                          </AlertDialog>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="subscriptions" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Subscription Management</CardTitle>
-              <CardDescription>Handle billing, refunds, and plan changes</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Client</TableHead>
-                    <TableHead>Current Plan</TableHead>
-                    <TableHead>Billing Status</TableHead>
-                    <TableHead>Next Billing</TableHead>
-                    <TableHead>Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {clients.filter(client => client.subscriptionPlan).map((client) => (
-                    <TableRow key={client.id}>
-                      <TableCell>
-                        <div>
-                          <div className="font-medium">{client.username}</div>
-                          <div className="text-sm text-muted-foreground">{client.email}</div>
-                        </div>
-                      </TableCell>
-                      <TableCell>{getPlanBadge(client.subscriptionPlan)}</TableCell>
-                      <TableCell>{getStatusBadge(client.subscriptionStatus)}</TableCell>
-                      <TableCell>
-                        {client.subscriptionEndsAt ? 
-                          new Date(client.subscriptionEndsAt).toLocaleDateString() : 
-                          'N/A'
-                        }
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex gap-2">
-                          <Select value={client.subscriptionPlan || undefined}>
-                            <SelectTrigger className="w-32">
-                              <SelectValue placeholder="Change Plan" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {subscriptionPlans.map((plan: any) => (
-                                <SelectItem key={plan.id} value={plan.name}>
-                                  {plan.name}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                          <AlertDialog>
-                            <AlertDialogTrigger asChild>
-                              <Button variant="outline" size="sm">
-                                <DollarSign className="w-4 h-4 mr-1" />
-                                Refund
-                              </Button>
-                            </AlertDialogTrigger>
-                            <AlertDialogContent>
-                              <AlertDialogHeader>
-                                <AlertDialogTitle>Process Refund</AlertDialogTitle>
-                                <AlertDialogDescription>
-                                  This will process a full refund for {client.username}'s current subscription. 
-                                  The refund will be sent to their original payment method.
-                                </AlertDialogDescription>
-                              </AlertDialogHeader>
-                              <AlertDialogFooter>
-                                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                <AlertDialogAction 
-                                  onClick={() => refundClientMutation.mutate(client.id)}
-                                  className="bg-red-600 hover:bg-red-700"
-                                >
-                                  Process Refund
-                                </AlertDialogAction>
-                              </AlertDialogFooter>
-                            </AlertDialogContent>
-                          </AlertDialog>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="permissions" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Menu Access Control</CardTitle>
-              <CardDescription>Enable or disable specific features for each client</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-6">
-                {clients.map((client) => (
-                  <div key={client.id} className="border rounded-lg p-4">
-                    <div className="flex items-center justify-between mb-4">
-                      <div>
-                        <h3 className="font-medium">{client.username}</h3>
-                        <p className="text-sm text-muted-foreground">{client.email}</p>
-                      </div>
-                      {getPlanBadge(client.subscriptionPlan)}
+      <h1 className="text-3xl font-bold">Admin Settings</h1>
+      
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* User Management */}
+        <Card>
+          <div className="p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-semibold">User Management</h2>
+              <Dialog open={isAddUserOpen} onOpenChange={setIsAddUserOpen}>
+                <DialogTrigger asChild>
+                  <Button>
+                    <Plus className="w-4 h-4 mr-2" />
+                    Add User
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Add New User</DialogTitle>
+                  </DialogHeader>
+                  <form
+                    onSubmit={form.handleSubmit((data) => addUserMutation.mutate(data))}
+                    className="space-y-4"
+                  >
+                    <div>
+                      <Label htmlFor="username">Username</Label>
+                      <Input {...form.register("username")} />
                     </div>
-                    <div className="grid grid-cols-3 gap-4">
-                      {Object.entries(client.menuPermissions).map(([menu, enabled]) => (
-                        <div key={menu} className="flex items-center justify-between">
-                          <Label htmlFor={`${client.id}-${menu}`} className="capitalize">
-                            {menu.replace(/([A-Z])/g, ' $1').trim()}
-                          </Label>
-                          <Switch
-                            id={`${client.id}-${menu}`}
-                            checked={enabled}
-                            onCheckedChange={(checked) => 
-                              handleMenuPermissionChange(client.id, menu, checked)
-                            }
-                          />
-                        </div>
-                      ))}
+                    <div>
+                      <Label htmlFor="email">Email</Label>
+                      <Input {...form.register("email")} type="email" />
+                    </div>
+                    <div>
+                      <Label htmlFor="password">Password</Label>
+                      <Input {...form.register("password")} type="password" />
+                    </div>
+                    <div>
+                      <Label htmlFor="role">Role</Label>
+                      <Select value={form.watch("role")} onValueChange={(value) => form.setValue("role", value as any)}>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="admin">Admin</SelectItem>
+                          <SelectItem value="security">Security</SelectItem>
+                          <SelectItem value="hr">HR</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <Button type="submit" disabled={addUserMutation.isPending}>
+                      {addUserMutation.isPending ? "Adding..." : "Add User"}
+                    </Button>
+                  </form>
+                </DialogContent>
+              </Dialog>
+            </div>
+            
+            <div className="space-y-2">
+              {users?.map((user) => (
+                <div key={user.id} className="flex items-center justify-between p-3 border rounded">
+                  <div>
+                    <div className="font-medium">{user.username}</div>
+                    <div className="text-sm text-muted-foreground">{user.email}</div>
+                    <div className="text-xs text-muted-foreground capitalize">{user.role}</div>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button variant="outline" size="sm" onClick={() => setEditingUser(user)}>
+                      <Edit2 className="w-4 h-4" />
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={() => deleteUserMutation.mutate(user.id)}
+                      disabled={deleteUserMutation.isPending}
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </Card>
+
+        {/* System Settings */}
+        <Card>
+          <div className="p-6">
+            <h2 className="text-xl font-semibold mb-4">System Settings</h2>
+            
+            {settings && (
+              <div className="space-y-6">
+                <div className="space-y-4">
+                  <h3 className="font-medium">Alert Settings</h3>
+                  
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="intrusion-alerts">Intrusion Detection</Label>
+                    <Switch
+                      id="intrusion-alerts"
+                      checked={settings.alertsIntrusion}
+                      onCheckedChange={(checked) => handleSettingChange("alertsIntrusion", checked)}
+                    />
+                  </div>
+                  
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="motion-alerts">Motion Detection</Label>
+                    <Switch
+                      id="motion-alerts"
+                      checked={settings.alertsMotion}
+                      onCheckedChange={(checked) => handleSettingChange("alertsMotion", checked)}
+                    />
+                  </div>
+                  
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="employee-alerts">Employee Monitoring</Label>
+                    <Switch
+                      id="employee-alerts"
+                      checked={settings.alertsEmployee}
+                      onCheckedChange={(checked) => handleSettingChange("alertsEmployee", checked)}
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <h3 className="font-medium">Recording Settings</h3>
+                  
+                  <div>
+                    <Label htmlFor="retention-days">Recording Retention (days)</Label>
+                    <Slider
+                      id="retention-days"
+                      min={1}
+                      max={365}
+                      step={1}
+                      value={[settings.recordingRetentionDays || 30]}
+                      onValueChange={([value]) => handleSettingChange("recordingRetentionDays", value)}
+                      className="mt-2"
+                    />
+                    <div className="text-sm text-muted-foreground mt-1">
+                      {settings.recordingRetentionDays || 30} days
                     </div>
                   </div>
-                ))}
+                  
+                  <div>
+                    <Label htmlFor="recording-quality">Default Recording Quality</Label>
+                    <Select 
+                      value={settings.recordingQuality || "high"} 
+                      onValueChange={(value) => handleSettingChange("recordingQuality", value)}
+                    >
+                      <SelectTrigger className="mt-1">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="low">Low (720p)</SelectItem>
+                        <SelectItem value="medium">Medium (1080p)</SelectItem>
+                        <SelectItem value="high">High (4K)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <h3 className="font-medium">Security Settings</h3>
+                  
+                  <div>
+                    <Label htmlFor="max-login-attempts">Max Login Attempts</Label>
+                    <Input
+                      id="max-login-attempts"
+                      type="number"
+                      min="1"
+                      max="10"
+                      value={settings.maxLoginAttempts || 3}
+                      onChange={(e) => handleSettingChange("maxLoginAttempts", parseInt(e.target.value))}
+                      className="mt-1"
+                    />
+                  </div>
+                  
+                  <div>
+                    <Label htmlFor="session-timeout">Session Timeout (minutes)</Label>
+                    <Slider
+                      id="session-timeout"
+                      min={5}
+                      max={480}
+                      step={5}
+                      value={[settings.sessionTimeoutMinutes || 60]}
+                      onValueChange={([value]) => handleSettingChange("sessionTimeoutMinutes", value)}
+                      className="mt-2"
+                    />
+                    <div className="text-sm text-muted-foreground mt-1">
+                      {settings.sessionTimeoutMinutes || 60} minutes
+                    </div>
+                  </div>
+                </div>
+
+                <Button
+                  onClick={() => updateSettingsMutation.mutate({})}
+                  disabled={updateSettingsMutation.isPending}
+                  className="w-full"
+                >
+                  <Save className="w-4 h-4 mr-2" />
+                  {updateSettingsMutation.isPending ? "Saving..." : "Save Settings"}
+                </Button>
               </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="system" className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>System Statistics</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex justify-between">
-                  <span>Total Clients:</span>
-                  <span className="font-medium">{clients.length}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Active Subscriptions:</span>
-                  <span className="font-medium">
-                    {clients.filter(c => c.subscriptionStatus === 'active').length}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Free Accounts:</span>
-                  <span className="font-medium">
-                    {clients.filter(c => !c.subscriptionPlan).length}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Total Cameras:</span>
-                  <span className="font-medium">
-                    {clients.reduce((sum, c) => sum + (c.maxCameras || 0), 0)}
-                  </span>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Quick Actions</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <Button className="w-full" variant="outline">
-                  <RefreshCw className="w-4 h-4 mr-2" />
-                  Sync Stripe Data
-                </Button>
-                <Button className="w-full" variant="outline">
-                  <Mail className="w-4 h-4 mr-2" />
-                  Send Bulk Email
-                </Button>
-                <Button className="w-full" variant="outline">
-                  <Users className="w-4 h-4 mr-2" />
-                  Export Client Data
-                </Button>
-                <Button className="w-full" variant="outline">
-                  <Settings className="w-4 h-4 mr-2" />
-                  System Maintenance
-                </Button>
-              </CardContent>
-            </Card>
+            )}
           </div>
-        </TabsContent>
-      </Tabs>
+        </Card>
+      </div>
 
-      {/* Edit Client Dialog */}
-      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>Edit Client: {selectedClient?.username}</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div>
-              <Label htmlFor="edit-username">Username</Label>
-              <Input {...form.register("username")} />
+      {/* Edit User Dialog */}
+      {editingUser && (
+        <Dialog open={!!editingUser} onOpenChange={() => setEditingUser(null)}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Edit User: {editingUser.username}</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="edit-username">Username</Label>
+                <Input
+                  id="edit-username"
+                  defaultValue={editingUser.username}
+                  onChange={(e) => setEditingUser({...editingUser, username: e.target.value})}
+                />
+              </div>
+              <div>
+                <Label htmlFor="edit-email">Email</Label>
+                <Input
+                  id="edit-email"
+                  type="email"
+                  defaultValue={editingUser.email}
+                  onChange={(e) => setEditingUser({...editingUser, email: e.target.value})}
+                />
+              </div>
+              <div>
+                <Label htmlFor="edit-role">Role</Label>
+                <Select 
+                  value={editingUser.role} 
+                  onValueChange={(value) => setEditingUser({...editingUser, role: value})}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="admin">Admin</SelectItem>
+                    <SelectItem value="security">Security</SelectItem>
+                    <SelectItem value="hr">HR</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <Button
+                onClick={() => updateUserMutation.mutate({
+                  id: editingUser.id,
+                  userData: {
+                    username: editingUser.username,
+                    email: editingUser.email,
+                    role: editingUser.role as any,
+                    password: editingUser.password
+                  }
+                })}
+                disabled={updateUserMutation.isPending}
+                className="w-full"
+              >
+                {updateUserMutation.isPending ? "Updating..." : "Update User"}
+              </Button>
             </div>
-            <div>
-              <Label htmlFor="edit-email">Email</Label>
-              <Input {...form.register("email")} type="email" />
-            </div>
-            <div>
-              <Label htmlFor="edit-plan">Subscription Plan</Label>
-              <Select value={form.watch("subscriptionPlan")} onValueChange={(value) => form.setValue("subscriptionPlan", value)}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select Plan" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="">No Plan</SelectItem>
-                  {subscriptionPlans.map((plan: any) => (
-                    <SelectItem key={plan.id} value={plan.name}>
-                      {plan.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label htmlFor="edit-cameras">Max Cameras</Label>
-              <Input {...form.register("maxCameras", { valueAsNumber: true })} type="number" />
-            </div>
-            <div className="flex items-center space-x-2">
-              <Switch {...form.register("isActive")} />
-              <Label>Account Active</Label>
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
-              Cancel
-            </Button>
-            <Button 
-              onClick={() => {
-                if (selectedClient) {
-                  updateClientMutation.mutate({
-                    clientId: selectedClient.id,
-                    data: form.getValues()
-                  });
-                }
-              }}
-            >
-              Save Changes
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   );
 }

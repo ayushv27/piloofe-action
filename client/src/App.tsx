@@ -19,6 +19,7 @@ import EventAlerts from "@/pages/alerts";
 import EmployeeMonitoring from "@/pages/employees";
 import ZoneSetup from "@/pages/zone-setup";
 import AdminSettings from "@/pages/admin";
+import Management from "@/pages/management";
 import ReportsAnalytics from "@/pages/reports";
 import Search from "@/pages/search";
 import Terms from "@/pages/terms";
@@ -122,6 +123,11 @@ function Router() {
       <Route path="/onboarding">
         <ProtectedRoute>
           <Onboarding />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/management">
+        <ProtectedRoute>
+          <Management />
         </ProtectedRoute>
       </Route>
       <Route component={NotFound} />
