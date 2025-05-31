@@ -2,7 +2,7 @@
 
 **Copyright © 2025 Pyrack Solutions Pvt. Ltd.**  
 Website: https://pyrack.com/  
-Licensed under the MIT License
+All rights reserved. Proprietary software.
 
 ## Overview
 
@@ -292,7 +292,9 @@ The platform includes a comprehensive gamification system to enhance user engage
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This software is proprietary and confidential. All rights reserved by Pyrack Solutions Pvt. Ltd. 
+
+Unauthorized copying, distribution, or use of this software, in whole or in part, is strictly prohibited without express written permission from Pyrack Solutions Pvt. Ltd.
 
 ## Support
 
