@@ -21,6 +21,8 @@ import ZoneSetup from "@/pages/zone-setup";
 import AdminSettings from "@/pages/admin";
 import ReportsAnalytics from "@/pages/reports";
 import Search from "@/pages/search";
+import Terms from "@/pages/terms";
+import Privacy from "@/pages/privacy";
 import NotFound from "@/pages/not-found";
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -98,6 +100,16 @@ function Router() {
       <Route path="/reports">
         <ProtectedRoute>
           <ReportsAnalytics />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/terms">
+        <ProtectedRoute>
+          <Terms />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/privacy">
+        <ProtectedRoute>
+          <Privacy />
         </ProtectedRoute>
       </Route>
       <Route component={NotFound} />

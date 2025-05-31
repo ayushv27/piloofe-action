@@ -1,6 +1,6 @@
 import { useAuth } from "@/lib/auth";
 import { Sidebar } from "./sidebar";
-import { useLocation } from "wouter";
+import { useLocation, Link } from "wouter";
 import { useEffect } from "react";
 import { Heart } from "lucide-react";
 
@@ -39,18 +39,16 @@ export function MainLayout({ children }: MainLayoutProps) {
         <footer className="bg-white/80 backdrop-blur-sm border-t border-slate-200 px-6 py-3 shadow-sm">
           <div className="flex items-center justify-between text-sm text-slate-600">
             <div className="flex items-center space-x-4">
-              <a 
-                href="#" 
-                className="hover:text-slate-900 transition-colors font-medium"
-              >
-                Terms & Conditions
-              </a>
-              <a 
-                href="#" 
-                className="hover:text-slate-900 transition-colors font-medium"
-              >
-                Privacy Policy
-              </a>
+              <Link href="/terms">
+                <a className="hover:text-slate-900 transition-colors font-medium">
+                  Terms & Conditions
+                </a>
+              </Link>
+              <Link href="/privacy">
+                <a className="hover:text-slate-900 transition-colors font-medium">
+                  Privacy Policy
+                </a>
+              </Link>
             </div>
             
             <div className="flex items-center space-x-1">
