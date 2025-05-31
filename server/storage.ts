@@ -1,10 +1,10 @@
 import { 
-  users, cameras, zones, alerts, employees, systemSettings, subscriptionPlans, demoRequests, searchQueries,
+  users, cameras, zones, alerts, employees, systemSettings, recordings, subscriptionPlans, demoRequests, searchQueries,
   type User, type InsertUser, type Camera, type InsertCamera,
   type Zone, type InsertZone, type Alert, type InsertAlert,
   type Employee, type InsertEmployee, type SystemSettings, type InsertSystemSettings,
-  type SubscriptionPlan, type InsertSubscriptionPlan, type DemoRequest, type InsertDemoRequest,
-  type SearchQuery, type InsertSearchQuery
+  type Recording, type InsertRecording, type SubscriptionPlan, type InsertSubscriptionPlan, 
+  type DemoRequest, type InsertDemoRequest, type SearchQuery, type InsertSearchQuery
 } from "@shared/schema";
 import { db } from "./db";
 import { eq } from "drizzle-orm";
@@ -66,6 +66,22 @@ export interface IStorage {
   // System Settings
   getSystemSettings(): Promise<SystemSettings | undefined>;
   updateSystemSettings(settings: Partial<InsertSystemSettings>): Promise<SystemSettings>;
+  
+  // Recordings
+  getRecording(id: number): Promise<Recording | undefined>;
+  getAllRecordings(): Promise<Recording[]>;
+  getRecordingsByCamera(cameraId: number): Promise<Recording[]>;
+  getRecordingsByDateRange(startDate: Date, endDate: Date): Promise<Recording[]>;
+  getRecordingsByFilters(filters: {
+    cameraId?: number;
+    startDate?: Date;
+    endDate?: Date;
+    quality?: string;
+    hasMotion?: boolean;
+  }): Promise<Recording[]>;
+  createRecording(recording: InsertRecording): Promise<Recording>;
+  updateRecording(id: number, recording: Partial<InsertRecording>): Promise<Recording | undefined>;
+  deleteRecording(id: number): Promise<boolean>;
 }
 
 export class MemStorage implements IStorage {

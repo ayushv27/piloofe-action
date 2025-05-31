@@ -59,6 +59,11 @@ function Router() {
           <LiveFeed />
         </ProtectedRoute>
       </Route>
+      <Route path="/recordings">
+        <ProtectedRoute>
+          <Recordings />
+        </ProtectedRoute>
+      </Route>
       <Route path="/alerts">
         <ProtectedRoute>
           <EventAlerts />

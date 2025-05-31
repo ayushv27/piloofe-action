@@ -695,6 +695,56 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Recordings routes for footage history
+  app.get("/api/recordings", async (req, res) => {
+    try {
+      // For now return empty array - Django backend will implement this
+      const recordings: any[] = [];
+      res.json(recordings);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch recordings" });
+    }
+  });
+
+  app.get("/api/recordings/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      // Django backend will implement actual recording retrieval
+      res.status(404).json({ message: "Recording not found" });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch recording" });
+    }
+  });
+
+  app.post("/api/recordings", async (req, res) => {
+    try {
+      // Django backend will handle recording creation
+      res.status(201).json({ message: "Recording created successfully" });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to create recording" });
+    }
+  });
+
+  app.delete("/api/recordings/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      // Django backend will handle recording deletion
+      res.json({ message: "Recording deleted successfully" });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to delete recording" });
+    }
+  });
+
+  app.get("/api/recordings/download/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      // Django backend will handle file streaming
+      res.status(404).json({ message: "Recording file not found" });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to download recording" });
+    }
+  });
+
   // Report generation routes
   app.post("/api/reports/generate", async (req, res) => {
     try {

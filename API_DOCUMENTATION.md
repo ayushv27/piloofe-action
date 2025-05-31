@@ -84,7 +84,9 @@ Response:
     "rtspUrl": "string",
     "status": "active|inactive|maintenance",
     "assignedZone": "string",
-    "sensitivity": "number"
+    "sensitivity": "number",
+    "recordingEnabled": "boolean",
+    "retentionDays": "number"
   }
 ]
 ```
@@ -193,6 +195,70 @@ Request: Partial<Alert>
 ### DELETE /api/alerts/:id
 ```json
 Response: 200 OK
+```
+
+## Recordings Management
+
+### GET /api/recordings
+```json
+Query Parameters:
+- cameraId: number (optional)
+- startDate: ISO date string (optional)
+- endDate: ISO date string (optional)
+- quality: "480p|720p|1080p" (optional)
+- hasMotion: boolean (optional)
+
+Response:
+[
+  {
+    "id": "number",
+    "cameraId": "number",
+    "filename": "string",
+    "filePath": "string",
+    "startTime": "date",
+    "endTime": "date", 
+    "duration": "number",
+    "fileSize": "number",
+    "quality": "480p|720p|1080p",
+    "hasMotion": "boolean",
+    "hasAudio": "boolean",
+    "thumbnailPath": "string",
+    "createdAt": "date"
+  }
+]
+```
+
+### GET /api/recordings/:id
+```json
+Response: Recording object
+```
+
+### POST /api/recordings
+```json
+Request:
+{
+  "cameraId": "number",
+  "filename": "string",
+  "filePath": "string",
+  "startTime": "date",
+  "endTime": "date",
+  "duration": "number",
+  "fileSize": "number",
+  "quality": "480p|720p|1080p",
+  "hasMotion": "boolean",
+  "hasAudio": "boolean",
+  "thumbnailPath": "string"
+}
+```
+
+### DELETE /api/recordings/:id
+```json
+Response: 200 OK
+```
+
+### GET /api/recordings/download/:id
+```json
+Response: File download stream
 ```
 
 ## Employee Monitoring

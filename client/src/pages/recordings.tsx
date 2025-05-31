@@ -347,9 +347,9 @@ export default function Recordings() {
                     <video 
                       controls 
                       className="w-full h-full rounded-lg"
-                      poster={selectedRecording.thumbnailPath}
+                      poster={selectedRecording.thumbnailPath || undefined}
                     >
-                      <source src={selectedRecording.filePath} type="video/mp4" />
+                      <source src={selectedRecording.filePath || ''} type="video/mp4" />
                       Your browser does not support the video tag.
                     </video>
                   </div>
