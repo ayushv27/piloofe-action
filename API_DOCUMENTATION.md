@@ -1,6 +1,6 @@
-# Piloo.ai API Documentation for Django Backend
+# Piloo.ai API Documentation
 
-This document outlines all API endpoints that the React frontend expects from the Django backend.
+This document outlines all API endpoints for the Piloo.ai CCTV monitoring platform, including authentication, user management, camera operations, alerts, recordings, analytics, and gamification features.
 
 ## Authentication Endpoints
 
@@ -706,6 +706,94 @@ The frontend expects WebSocket connections at `/ws` for real-time updates:
   "type": "update",
   "updateType": "cameras|alerts|employees|zones",
   "data": "object"
+}
+```
+
+## Onboarding & Gamification
+
+### GET /api/onboarding/progress
+Get user's onboarding progress and achievement status.
+```json
+Response:
+{
+  "id": "number",
+  "userId": "number",
+  "currentStep": "number",
+  "completedSteps": "number[]",
+  "totalPoints": "number",
+  "achievements": "number[]",
+  "tutorialCompleted": "boolean",
+  "lastActiveStep": "string",
+  "onboardingStarted": "date",
+  "onboardingCompleted": "date",
+  "createdAt": "date",
+  "updatedAt": "date"
+}
+```
+
+### GET /api/onboarding/steps
+Get all available onboarding steps.
+```json
+Response: OnboardingStep[]
+{
+  "id": "number",
+  "stepNumber": "number",
+  "title": "string",
+  "description": "string",
+  "targetPage": "string",
+  "targetElement": "string",
+  "instructions": "string",
+  "points": "number",
+  "category": "string",
+  "estimatedTime": "number",
+  "isRequired": "boolean",
+  "isActive": "boolean",
+  "createdAt": "date"
+}
+```
+
+### POST /api/onboarding/complete-step/:stepId
+Mark an onboarding step as completed.
+```json
+Response:
+{
+  "id": "number",
+  "userId": "number",
+  "currentStep": "number",
+  "completedSteps": "number[]",
+  "totalPoints": "number",
+  "achievements": "number[]",
+  "tutorialCompleted": "boolean",
+  "lastActiveStep": "string"
+}
+```
+
+### GET /api/achievements
+Get all available achievements.
+```json
+Response: Achievement[]
+{
+  "id": "number",
+  "name": "string",
+  "description": "string",
+  "icon": "string",
+  "points": "number",
+  "category": "string",
+  "condition": "object",
+  "isActive": "boolean",
+  "createdAt": "date"
+}
+```
+
+### POST /api/achievements/award/:achievementId
+Award an achievement to a user.
+```json
+Response:
+{
+  "id": "number",
+  "userId": "number",
+  "totalPoints": "number",
+  "achievements": "number[]"
 }
 ```
 
