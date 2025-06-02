@@ -7,13 +7,13 @@ RUN apk add --no-cache libc6-compat
 WORKDIR /app
 
 # Install dependencies based on the preferred package manager
-COPY package*.json ./
+COPY package*.json ./app
 RUN npm ci --only=production && npm cache clean --force
 
 # Development stage
 FROM base AS dev
 WORKDIR /app
-COPY package*.json ./
+COPY package*.json ./app
 RUN npm ci
 COPY . .
 EXPOSE 5000
@@ -22,7 +22,7 @@ CMD ["npm", "run", "dev"]
 # Build stage
 FROM base AS builder
 WORKDIR /app
-COPY package*.json ./
+COPY package*.json ./app
 RUN npm ci
 COPY . .
 
