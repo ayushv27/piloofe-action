@@ -2,8 +2,30 @@
 -- This script creates necessary extensions and initial setup
 
 -- Create database if it doesn't exist
-CREATE DATABASE IF NOT EXISTS piloo_production;
-CREATE DATABASE IF NOT EXISTS piloo_dev;
+-- CREATE DATABASE IF NOT EXISTS piloo_production;
+-- CREATE DATABASE IF NOT EXISTS piloo_dev;
+DO
+$$
+BEGIN
+   IF NOT EXISTS (
+      SELECT FROM pg_database WHERE datname = 'piloo_production'
+   ) THEN
+      CREATE DATABASE piloo_production;
+   END IF;
+END
+$$;
+
+DO
+$$
+BEGIN
+   IF NOT EXISTS (
+      SELECT FROM pg_database WHERE datname = 'piloo_dev'
+   ) THEN
+      CREATE DATABASE piloo_dev;
+   END IF;
+END
+$$;
+
 
 -- Enable required extensions
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
