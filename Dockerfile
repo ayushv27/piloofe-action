@@ -13,7 +13,7 @@ RUN npm ci --only=production && npm cache clean --force
 # Development stage
 FROM base AS dev
 WORKDIR /app
-COPY package*.json ./app
+COPY package*.json ./
 RUN npm ci
 COPY . .
 EXPOSE 5000
@@ -22,7 +22,7 @@ CMD ["npm", "run", "dev"]
 # Build stage
 FROM base AS builder
 WORKDIR /app
-COPY package*.json ./app
+COPY package*.json ./
 RUN npm ci
 COPY . .
 
