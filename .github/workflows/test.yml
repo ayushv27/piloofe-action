@@ -1,0 +1,50 @@
+name: Test Workflow
+
+on:
+  push:
+    branches: [ main, develop, feature/* ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+    
+    - name: Install dependencies
+      run: npm ci
+    
+    - name: Run type check
+      run: npm run check
+    
+    - name: Build application
+      run: npm run build
+    
+    - name: Test Docker build
+      run: |
+        docker build -t piloofe-test .
+        echo "Docker build successful!"
+    
+    - name: Notify on success
+      if: success()
+      run: |
+        echo "✅ All tests passed!"
+        echo "Branch: ${{ github.ref_name }}"
+        echo "Commit: ${{ github.sha }}"
+        echo "Actor: ${{ github.actor }}"
+    
+    - name: Notify on failure
+      if: failure()
+      run: |
+        echo "❌ Tests failed!"
+        echo "Please check the logs above for details."
+
