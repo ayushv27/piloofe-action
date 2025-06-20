@@ -1,0 +1,31 @@
+# .github/workflows/deploy.yml
+name: CI/CD to Physical Server
+
+on:
+  push:
+    branches: [ main ]  # or staging
+
+jobs:
+  deploy:
+    name: Deploy to Physical Server
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup SSH
+      uses: webfactory/ssh-agent@v0.9.0
+      with:
+        ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+    - name: Deploy via SSH
+      run: |
+        ssh -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} << 'EOF'
+          cd /home/${{ secrets.SSH_USER }}/myapp  # Change to your app path
+          git pull origin main
+          docker compose down --remove-orphans
+          docker compose pull
+          docker compose up -d --build
+          docker system prune -f
+        EOF
