@@ -1,3 +1,4 @@
+# .github/workflows/deploy.yml
 name: CI/CD to Physical Server
 
 on:
@@ -20,8 +21,8 @@ jobs:
 
     - name: Deploy via SSH
       run: |
-        ssh -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} << 'EOF'
-          cd /home/ubuntu/piloofe
+        ssh -p ${{ secrets.SSH_PORT }} -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} << 'EOF'
+          cd /home/${{ secrets.SSH_USER }}/myapp  # Change this path as needed
           git pull origin main
           docker compose -f docker-compose-prod.yml down --remove-orphans
           docker compose -f docker-compose-prod.yml pull
