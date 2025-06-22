@@ -10,33 +10,31 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout code
+    - name: Checkout
       uses: actions/checkout@v4
 
-    # 1️⃣  Start an ssh-agent and feed it the private key stored in secrets
     - name: Add SSH key
       uses: webfactory/ssh-agent@v0.8.0
       with:
         ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
 
-    # 2️⃣  Add the server’s host key once so StrictHostKeyChecking can stay on
-    - name: Trust server fingerprint
+    - name: Add server to known_hosts
       run: |
         mkdir -p ~/.ssh
         ssh-keyscan -p ${{ secrets.SSH_PORT }} ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
 
-    # 3️⃣  Run your deployment commands
     - name: Deploy via SSH
       run: |
-        ssh -p ${{ secrets.SSH_PORT }} ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} <<'EOS'
-          set -e                      # fail fast on the server too
-          cd ~/myapp                  # simpler: you’re already that user
+        ssh -p ${{ secrets.SSH_PORT }} ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} << 'EOF'
+          set -e
+          cd ~/myapp
           git pull origin main
           docker compose -f docker-compose-prod.yml down --remove-orphans
           docker compose -f docker-compose-prod.yml pull
           docker compose -f docker-compose-prod.yml up -d --build
           docker system prune -f
-        EOS
+        EOF
+
 
 
 # jobs:
